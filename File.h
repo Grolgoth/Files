@@ -26,8 +26,10 @@ class File {
 		std::vector<std::string> getLines(bool fromCurrentPos);
 		void close();
 		void open();
+		void clear();
 		void write(std::string text);
 		void write(String text);
+		void replace(std::string find, std::string target, bool ignorecase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		void setPos(long pos, bool relativeToCurrentPos = false);
 
 	protected:

@@ -1,6 +1,22 @@
 #include "String.h"
 #include <regex>
 
+String String::fromVector(std::vector<std::string> vect, std::string appendElements)
+{
+	std::string result = "";
+	for (std::string index : vect)
+		result += index + appendElements;
+	return String(result);
+}
+
+String String::fromVector(std::vector<String> vect, std::string appendElements)
+{
+	std::string resultstr = "";
+	for (String index : vect)
+		resultstr += index.toStdString() + appendElements;
+	return String(resultstr);
+}
+
 String::String(std::string base)
 {
 	this->base = base;
@@ -14,6 +30,16 @@ String String::operator+(const String& b)
 bool String::operator!=(const String& b)
 {
 	return base != b.base;
+}
+
+bool String::toBool()
+{
+	if (base == "true")
+		return true;
+	else if(base == "false")
+		return false;
+	else
+		throw "Can't convert " + base + " to a boolean because it is not equal to either false, or true";
 }
 
 bool String::contains(std::string sfind, bool ignoreCase)
@@ -57,6 +83,7 @@ int String::compare(std::string other)
 {
 	return base.compare(other);
 }
+
 int String::compare(String other)
 {
 	return compare(other.toStdString());
@@ -98,6 +125,21 @@ int String::indexOf(std::string sfind, bool ignoreCase, unsigned int fromPos, un
 int String::indexOf(String sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
 {
 	return indexOf(sfind.toStdString(), ignoreCase, fromPos);
+}
+
+int String::toInt()
+{
+    try
+    {
+		return atoi(base.c_str());
+    }
+    catch(...)
+    {
+        if(!isdigit(base[0]))
+			throw "Can't convert " + base + " to an integer, because it doesn't start with a digit.";
+		else
+			throw "Can't convert " + base + " to an integer. Unknown error during conversion.";
+    }
 }
 
 char* String::toCharArray()

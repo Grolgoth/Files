@@ -6,10 +6,14 @@
 
 class String {
 	public:
+		static String fromVector(std::vector<String> vect, std::string appendElements = "");
+		static String fromVector(std::vector<std::string> vect, std::string appendElements = "");
+
 		String(std::string base);
 
 		String operator+(const String& b);
 		bool operator!=(const String& b);
+		bool toBool();
 		bool contains(std::string sfind, bool ignoreCase = true);
 		bool contains(String sfind, bool ignoreCase = true);
 		bool containsRegex(std::string sregex);
@@ -21,6 +25,7 @@ class String {
 		int compare(String other);
 		int indexOf(std::string sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);
 		int indexOf(String sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);
+		int toInt();
 		char* toCharArray();
 		std::string toStdString() const;
 		String substring(unsigned int ibegin, int iend = -1);

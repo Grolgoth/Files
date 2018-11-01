@@ -161,6 +161,9 @@ std::string File::readline()
 		throw "Can't read file because it isn't open";
 }
 
+/**
+Get all lines of the file, cursor position in file will be set to EOF
+*/
 std::vector<std::string> File::getLines(bool fromCurrentPos)
 {
 	if (mopen)
@@ -202,6 +205,19 @@ void File::close()
 	mopen = false;
 }
 
+void File::clear()
+{
+	if(exists() && mopen)
+	{
+		fclose(f);
+		f = fopen(mabsoluteFileName.c_str(), "w+");
+	}
+	else if (!exists())
+		throw "Can't clear file because it doesn't exist";
+	else
+		throw "Can't clear file because it isn't open";
+}
+
 void File::write(std::string text)
 {
 	if (mopen)
@@ -212,15 +228,47 @@ void File::write(std::string text)
 		fputs(text.c_str(), f);
 		if (!rest.empty())
 		{
-			std::string all = "";
-			for (std::string index : rest)
-				all += index + '\n';
+			std::string all = String::fromVector(rest, "\n").toStdString();
 			fputs(all.c_str(), f);
 		}
-		fseek(f, mempos, SEEK_SET);
+		fseek(f, mempos + text.length(), SEEK_SET);
 	}
 	else
 		throw "Can't write to file because it isn't open.";
+}
+
+/**
+Get all lines of the file, cursor position in file will be lost
+*/
+void File::replace(std::string find, std::string target, bool ignoreCase, bool all, int occurences, long fromPos, long until)
+{
+	if (fromPos != -1 && (fromPos < 0 || until <= fromPos))
+		throw "Can't execute replace operation because the positions specified in the file are invalid.";
+	std::vector<std::string> lines;
+	if (fromPos != -1)
+	{
+		fseek(f, fromPos, SEEK_SET);
+		lines = getLines(true);
+	}
+	else
+		lines = getLines(false);
+	std::string allstr = String::fromVector(lines, "\n").toStdString();
+	if (fromPos != -1)
+	{
+		std::string first = String(allstr).substring(0, until - fromPos)
+			.replace(find, target, ignoreCase, all, occurences, true)
+			.toStdString();
+		std::string second = String(allstr).substring(until - fromPos)
+			.toStdString();
+		allstr = first + second;
+	}
+	else
+	{
+		allstr = String(allstr).replace(find, target, ignoreCase, all, occurences, true).toStdString();
+		fromPos = 0;
+	}
+	fseek(f, fromPos, SEEK_SET);
+	fputs(allstr.c_str(), f);
 }
 
 void File::write(String text)
