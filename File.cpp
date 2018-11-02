@@ -161,6 +161,23 @@ std::string File::readline()
 		throw "Can't read file because it isn't open";
 }
 
+std::string File::getFromFile(unsigned long beginpos, unsigned long endpos)
+{
+	std::string result = "";
+	if (beginpos >= endpos)
+		throw "Can't get snippet from file because the specified begin position >= the end position.";
+	fseek(f, beginpos, SEEK_SET);
+	long remainder = endpos - beginpos;
+	int c = fgetc(f);
+	while(c != EOF && remainder > 0)
+	{
+		result += (char)c;
+		c = fgetc(f);
+		remainder --;
+	}
+	return result;
+}
+
 /**
 Get all lines of the file, cursor position in file will be set to EOF
 */
@@ -173,12 +190,13 @@ std::vector<std::string> File::getLines(bool fromCurrentPos)
 			if (ftell(f) != 0)
 				fseek(f, 0, SEEK_SET);
 		std::string line = "";
-		do
+		while (true)
 		{
 			line = readline();
-			if (line != "")
-				result.push_back(line);
-		} while (line  != "");
+			if (line == "" && atEOF())
+				break;
+			result.push_back(line);
+		}
 		return result;
 	}
 	else
@@ -266,14 +284,12 @@ void File::replace(std::string find, std::string target, bool ignoreCase, bool a
 			.toStdString();
 		std::string second = String(allstr).substring(until - fromPos)
 			.toStdString();
-		allstr = first + second;
+		std::string before = getFromFile(0, fromPos);
+		allstr = before + first + second;
 	}
 	else
-	{
 		allstr = String(allstr).replace(find, target, ignoreCase, all, occurences, true).toStdString();
-		fromPos = 0;
-	}
-	fseek(f, fromPos, SEEK_SET);
+	clear();
 	fputs(allstr.c_str(), f);
 }
 

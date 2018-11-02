@@ -23,6 +23,7 @@ class File {
 		std::string getPath();
 		std::string getFileName();
 		std::string readline();
+		std::string getFromFile(unsigned long beginpos = 0, unsigned long endpos = 0);
 		std::vector<std::string> getLines(bool fromCurrentPos);
 		void close();
 		void open();
