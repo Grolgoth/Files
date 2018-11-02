@@ -242,8 +242,10 @@ Get all lines of the file, cursor position in file will be lost
 */
 void File::replace(std::string find, std::string target, bool ignoreCase, bool all, int occurences, long fromPos, long until)
 {
-	if (fromPos != -1 && (fromPos < 0 || until <= fromPos))
+	if (fromPos != -1 && (fromPos < 0 || (until <= fromPos && until != -1)))
 		throw "Can't execute replace operation because the positions specified in the file are invalid.";
+	if (fromPos != -1 && fromPos >= 0 && (unsigned)fromPos >= getSize())
+		throw "Can't execute replace operation because the start position in the file is bigger than the file lenght.";
 	std::vector<std::string> lines;
 	if (fromPos != -1)
 	{
@@ -255,6 +257,10 @@ void File::replace(std::string find, std::string target, bool ignoreCase, bool a
 	std::string allstr = String::fromVector(lines, "\n").toStdString();
 	if (fromPos != -1)
 	{
+		if (until < 0)
+			until = allstr.length();
+		if ((unsigned)until > allstr.length())
+			throw "Can't execute replace operation because the end position specified is greater than the file length.";
 		std::string first = String(allstr).substring(0, until - fromPos)
 			.replace(find, target, ignoreCase, all, occurences, true)
 			.toStdString();
@@ -279,9 +285,10 @@ void File::write(String text)
 void File::setPos(long pos, bool relativeToCurrentPos)
 {
 	if (relativeToCurrentPos)
-		fseek(f, pos, SEEK_CUR);
-	else if (pos > -1)
-		fseek(f, pos, SEEK_SET);
-	else
-		throw "Shouldn't set pos of file to a negative position";
+		pos += ftell(f);
+	if (pos < 0)
+		throw "Shouldn't set position of file to a negative value";
+	if ((unsigned)pos >= getSize())
+		throw "Can't set file position to something greater than its size.";
+	fseek(f, pos, SEEK_SET);
 }
