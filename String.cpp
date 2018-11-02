@@ -188,6 +188,21 @@ String String::invert(unsigned int ibegin, int iend)
 	return result;
 }
 
+std::vector<int> String::findAll(std::string find, bool ignoreCase, int fromPos)
+{
+	std::vector<int> result;
+	int occurences = 1;
+	while (true)
+	{
+		int f = indexOf(find, ignoreCase, fromPos, occurences);
+		if (f == -1)
+			break;
+		result.push_back(f);
+		occurences ++;
+	}
+	return result;
+}
+
 String String::replace(std::string sfind, std::string target, bool ignoreCase, bool all, int occurences, bool fromBegin)
 {
 	std::string result = "";
