@@ -10,7 +10,7 @@ class File {
 
 		static std::string getPathToExe();
 
-		File(std::string file);
+		File(std::string file, bool platformSpecific = true);
 		~File();
 
 		bool exists();
@@ -24,13 +24,15 @@ class File {
 		std::string getFileName();
 		std::string readline();
 		std::string getFromFile(unsigned long beginpos = 0, unsigned long endpos = 0);
+		std::vector<long> findAll(std::string find, bool ignoreCase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		std::vector<std::string> getLines(bool fromCurrentPos);
+		void create();
 		void close();
 		void open();
 		void clear();
 		void write(std::string text);
 		void write(String text);
-		void replace(std::string find, std::string target, bool ignorecase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
+		void replace(std::string find, std::string target, bool ignoreCase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		void setPos(long pos, bool relativeToCurrentPos = false);
 
 	protected:
@@ -38,6 +40,7 @@ class File {
 		std::string mabsoluteFileName;
 		char dir = 'u';
 		bool mopen;
+		bool platformSpecific;
 		FILE* f = nullptr;
 };
 

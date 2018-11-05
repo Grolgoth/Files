@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "string.h"
 #include <sys/stat.h>
+#include <algorithm>
 
 #ifdef OS_Windows
 #include "windows.h"
@@ -37,7 +38,11 @@ std::string File::getPathToExe()
 	return String(executableName).split("/", true, false, 1, false)[0].toStdString();
 }
 
-File::File(std::string file) : mopen(false)
+/**
+Represents a file to read and write to. If platformSpecific = true it will convert
+newline characters to \r\n for windows systems when performing write operations.
+*/
+File::File(std::string file, bool platformSpecific) : mopen(false), platformSpecific(platformSpecific)
 {
 	if (String(file).startsWith("./") || String(file).startsWith("../") || !String(file).contains("/"))
 	{
@@ -179,6 +184,45 @@ std::string File::getFromFile(unsigned long beginpos, unsigned long endpos)
 }
 
 /**
+Get all indexes of find param in specified part of file, cursor position will be lost
+*/
+std::vector<long> File::findAll(std::string find, bool ignoreCase, bool all, int occurences, long fromPos, long until)
+{
+	if (fromPos != -1 && (fromPos < 0 || (until <= fromPos && until != -1)))
+		throw "Can't search in file because the positions specified in the file are invalid.";
+	if (fromPos != -1 && fromPos >= 0 && (unsigned)fromPos >= getSize())
+		throw "Can't search in file because the start position in the file is bigger than the file lenght.";
+	std::vector<std::string> lines;
+	std::vector<long> indexes;
+	if (fromPos != -1)
+	{
+		fseek(f, fromPos, SEEK_SET);
+		lines = getLines(true);
+	}
+	else
+	{
+		lines = getLines(false);
+		fromPos = 0;
+	}
+	std::string allstr = String::fromVector(lines, "\n").toStdString();
+	if (fromPos != -1 && until != -1)
+		allstr = String(allstr).substring(0, until - fromPos).toStdString();
+	if (!all)
+	{
+		while (occurences > 0)
+		{
+			indexes.push_back(String(allstr).indexOf(find, ignoreCase, 0, occurences) + fromPos);
+			occurences --;
+		}
+		std::reverse(indexes.begin(), indexes.end());
+		return indexes;
+	}
+	for(int index : String(allstr).findAll(find, ignoreCase))
+		indexes.push_back(index + fromPos);
+	return indexes;
+}
+
+/**
 Get all lines of the file, cursor position in file will be set to EOF
 */
 std::vector<std::string> File::getLines(bool fromCurrentPos)
@@ -203,11 +247,22 @@ std::vector<std::string> File::getLines(bool fromCurrentPos)
 		throw "Can't read file because it isn't open";
 }
 
+void File::create()
+{
+	if (!exists())
+	{
+		f = fopen(mabsoluteFileName.c_str(), "wb+");
+		fclose(f);
+	}
+	else
+		throw "Can't create file because it already exists";
+}
+
 void File::open()
 {
 	if (dir == 'f')
 	{
-		f = fopen(mabsoluteFileName.c_str(), "r+");
+		f = fopen(mabsoluteFileName.c_str(), "rb+");
 		mopen = true;
 	}
 	else if (dir == 'd')
@@ -228,7 +283,7 @@ void File::clear()
 	if(exists() && mopen)
 	{
 		fclose(f);
-		f = fopen(mabsoluteFileName.c_str(), "w+");
+		f = fopen(mabsoluteFileName.c_str(), "wb+");
 	}
 	else if (!exists())
 		throw "Can't clear file because it doesn't exist";
