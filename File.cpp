@@ -183,6 +183,16 @@ std::string File::getFromFile(unsigned long beginpos, unsigned long endpos)
 	return result;
 }
 
+std::string File::toPlatform(std::string base)
+{
+	if (!platformSpecific)
+		return base;
+	#ifdef OS_Windows
+		base = String(base).replace("\n", "\r\n").toStdString();
+	#endif
+	return base;
+}
+
 /**
 Get all indexes of find param in specified part of file, cursor position will be lost
 */
@@ -298,6 +308,7 @@ void File::write(std::string text)
 		int mempos = ftell(f);
 		std::vector<std::string> rest = getLines(true);
 		fseek(f, mempos, SEEK_SET);
+		text = toPlatform(text);
 		fputs(text.c_str(), f);
 		if (!rest.empty())
 		{
@@ -327,6 +338,7 @@ void File::replace(std::string find, std::string target, bool ignoreCase, bool a
 	}
 	else
 		lines = getLines(false);
+	target = toPlatform(target);
 	std::string allstr = String::fromVector(lines, "\n").toStdString();
 	if (fromPos != -1)
 	{

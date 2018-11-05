@@ -42,6 +42,8 @@ class File {
 		bool mopen;
 		bool platformSpecific;
 		FILE* f = nullptr;
+
+		std::string toPlatform(std::string base);
 };
 
 #endif // FILE_H_INCLUDED
