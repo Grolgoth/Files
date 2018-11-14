@@ -218,6 +218,11 @@ String String::replace(std::string sfind, std::string target, bool ignoreCase, b
 	return String(result);
 }
 
+String String::transform(Algorithm algorithm)
+{
+	return *this;
+}
+
 std::vector<String> String::split(std::string sfind, bool ignoreCase, bool all, int occurences, bool fromBegin)
 {
 	std::vector<String> result;
