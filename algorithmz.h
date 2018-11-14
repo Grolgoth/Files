@@ -1,5 +1,5 @@
-#ifndef ALGORITHM_H
-#define ALGORITHM_H
+#ifndef ALGORITHMZ_H
+#define ALGORITHMZ_H
 
 #include <iostream>
 
@@ -16,4 +16,4 @@ class Algorithm {
 		std::string algorithm;
 };
 
-#endif // ALGORITHM_H
+#endif // ALGORITHMZ_H
