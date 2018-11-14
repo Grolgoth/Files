@@ -169,6 +169,8 @@ std::string File::readline()
 std::string File::getFromFile(unsigned long beginpos, unsigned long endpos)
 {
 	std::string result = "";
+	if (endpos == 0)
+		endpos = getSize();
 	if (beginpos >= endpos)
 		throw "Can't get snippet from file because the specified begin position >= the end position.";
 	fseek(f, beginpos, SEEK_SET);
@@ -374,4 +376,20 @@ void File::setPos(long pos, bool relativeToCurrentPos)
 	if ((unsigned)pos >= getSize())
 		throw "Can't set file position to something greater than its size.";
 	fseek(f, pos, SEEK_SET);
+}
+
+/**
+Encodes the file given an algorithm
+*/
+void File::encode(Algorithm algorithm)
+{
+	std::vector<std::string> lines;
+	lines = getLines(false);
+	clear();
+	for (std::string line : lines)
+	{
+		line.push_back('\n');
+		line = String(line).transform(algorithm).toStdString();
+		fputs(line.c_str(), f);
+	}
 }
