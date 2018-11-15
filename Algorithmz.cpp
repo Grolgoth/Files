@@ -1,5 +1,6 @@
 #include "algorithmz.h"
 #include "String.h"
+#include <cmath>
 
 /**
 Represents an algorithm, based on the algorithm parameter.
@@ -9,19 +10,20 @@ Operators can be of following types: +, -, *, /, %, ^, R(root), !
 For powers, roots and faculty operations write the operator behind the numer,
 followed by the power (if applicable): 3^2, 27R3, 6! (27R3 = 3).
 Don't go crazy on the numbers (9999999999999999999999! will probably crash due to memory)
-Decimals and negative numbers are not allowed, and it is wise not to use / and R when they could
-produce decimals, since this might lead to unpredictable behaviour.
+Decimals, nested brackets, and negative numbers are not allowed,
+and results of operations with / and R will be truncated.
 */
 Algorithm::Algorithm(std::string algorithm) : algorithm(algorithm)
 {
-
+	for (unsigned int i = 0; i < algorithm.length(); i++)
+		this->algorithm[i] = toupper(algorithm[i]);
 }
 
 bool charIsLegal(char target)
 {
 	if (isdigit(target))
 		return true;
-	switch(toupper(target))
+	switch(target)
 	{
 		case '+':
 		case '-':
@@ -32,7 +34,7 @@ bool charIsLegal(char target)
 		case 'R':
 		case '(':
 		case ')':
-		case 'x':
+		case 'X':
 			return true;
 		default:
 			return false;
@@ -46,6 +48,19 @@ bool needsReferenceUpFront(char target)
 	return false;
 }
 
+bool takesPrevalenceOver(char operation, char target)
+{
+	if (target == 'R' || target == '^' || target == '!')
+		return false;
+	if (operation == '*')
+		return true;
+	if (operation == '/' && target != '*')
+		return true;
+	if (operation == '%' && target != '*')
+		return true;
+	return false;
+}
+
 std::string toString(char c)
 {
 	std::string result = "";
@@ -53,18 +68,19 @@ std::string toString(char c)
 	return result;
 }
 
-int readDigit(int target, std::string algorithm, int* pos, int len)
+int readDigit(int target, std::string algoString, int* pos, int len)
 {
-	char c = algorithm[*pos];
-	pos ++;
-	if (c == 'x')
+	char c = algoString[*pos];
+	++ *pos;
+	if (c == 'X')
 		return target;
 	else
 	{
 		int result = atoi(toString(c).c_str());
-		while (*pos + 1 < len && isdigit(algorithm[++ *pos]))
+		while (*pos < len && isdigit(algoString[*pos]))
 		{
-			c = algorithm[*pos];
+			c = algoString[*pos];
+			++ *pos;
 			result = result * 10 + atoi(toString(c).c_str());
 		}
 		return result;
@@ -73,7 +89,11 @@ int readDigit(int target, std::string algorithm, int* pos, int len)
 
 bool noFurtherOperation(std::string algoString, int pos, int len, char operation)
 {
-	return true;
+	if (operation == 'R' || operation == '^' || operation == '!')
+		return true;
+	if (takesPrevalenceOver(operation, algoString[pos]))
+		return true;
+	return pos + 1 >= len;
 }
 
 struct Operation {
@@ -90,33 +110,60 @@ struct Operation {
 
 int doOperation(Operation operation)
 {
+	int negative = 1;
+	if (operation.negative)
+		negative = -1;
 	switch(operation.operation)
 	{
-
+	case '+':
+		return (operation.firstValue + operation.secondValue) * negative;
+	case '-':
+		return (operation.firstValue - operation.secondValue) * negative;
+	case '*':
+		return (operation.firstValue * operation.secondValue) * negative;
+	case '/':
+		return (operation.firstValue / operation.secondValue) * negative;
+	case '%':
+		return (operation.firstValue % operation.secondValue) * negative;
+	case '^':
+		return pow((double)operation.firstValue, (double)operation.secondValue) * negative;
+	case 'R':
+		return pow((double)operation.firstValue, 1/(double)operation.secondValue) * negative;
+	default:
+		return 1 * negative;
 	}
-	//if (operation.negative)
-		//return result * -1;
-	return 1;
+}
+
+bool checkBracket(bool open, std::string algoString, int* pos)
+{
+	char type = '(';
+	if (!open)
+		type = ')';
+	if (algoString[*pos] == type)
+	{
+		++ *pos;
+		return true;
+	}
+	return false;
 }
 
 Operation getOperation(int target, std::string algoString, int pos, int len, int* firstValue, bool isNegative)
 {
 	int secondValue = 0;
 	bool bracket = false;
+	bool closeBracket = false;
 	while (pos != len)
 	{
+		bracket = checkBracket(true, algoString, &pos);
 		if (firstValue == nullptr)
 			firstValue = new int(readDigit(target, algoString, &pos, len));
 		char operation = algoString[pos];
 		pos ++;
 		bool negative = operation == '-';
-		if (algoString[pos] == '(')
-		{
-			pos ++;
-			bracket = true;
-		}
+		bracket = checkBracket(true, algoString, &pos);
 		secondValue = readDigit(target, algoString, &pos, len);
-		if (!bracket || noFurtherOperation(algoString, pos, len, operation))
+		closeBracket = checkBracket(false, algoString, &pos);
+		if (closeBracket || (!bracket && noFurtherOperation(algoString, pos, len, operation)))
 		{
 			if (pos + 1 < len)
 				return getOperation(target, algoString, pos, len, new int(doOperation(Operation(operation, *firstValue, secondValue, false))), isNegative);
@@ -133,11 +180,11 @@ bool Algorithm::isValid()
 {
 	bool gotRef = false;
 	bool digitOk = true;
-	bool bracketOk = false;
+	bool bracketOk = true;
 	int brackets = 0;
 	String algoString(algorithm);
 	algoString = algoString.replace(" ", "");
-	if (String(algorithm).startsWith("x="))
+	if (!String(algorithm).startsWith("X="))
 		return false;
 	algoString = algoString.substring(2);
 	int len = algoString.toStdString().length();
@@ -148,13 +195,13 @@ bool Algorithm::isValid()
 		pos ++;
 		if (!charIsLegal(c) || (needsReferenceUpFront(c) != gotRef && !isdigit(c)) || (isdigit(c) && !digitOk))
 			return false;
-		digitOk = !(c == 'x');
-		bracketOk = !(c == '(' || c == ')');
+		digitOk = !(c == 'X');
 		if (c == '(')
 		{
 			if (!bracketOk)
 				return false;
 			brackets ++;
+			bracketOk = false;
 			continue;
 		}
 		if (c == ')')
@@ -162,11 +209,13 @@ bool Algorithm::isValid()
 			if (!bracketOk)
 				return false;
 			brackets --;
+			bracketOk = false;
 			digitOk = false;
 			gotRef = true;
 			continue;
 		}
-		if (isdigit(c) || c == 'x')
+		bracketOk = true;
+		if (isdigit(c) || c == 'X')
 			gotRef = true;
 		else
 			gotRef = false;
@@ -180,10 +229,13 @@ int Algorithm::execute(int target)
 {
 	if (isValid())
 	{
-		std::string algoString = String(algorithm).substring(2).toStdString();
+		std::string algoString = String(algorithm).replace(" ", "").substring(2).toStdString();
 		Operation operation = getOperation(target, algoString, 0, algoString.length(), nullptr, false);
 		return doOperation(operation);
 	}
 	else
-		throw "Can't perform algorithm, because the Algorithm provided is unvalid: " + algorithm;
+	{
+		std::string error = "Can't perform algorithm, because the Algorithm provided is unvalid: " + algorithm;
+		throw error.c_str();
+	}
 }
