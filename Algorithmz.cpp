@@ -9,7 +9,7 @@ It is possible to encase parts of the string in curved brackets to specify the o
 Operators can be of following types: +, -, *, /, %, ^, R(root), !
 For powers, roots and faculty operations write the operator behind the numer,
 followed by the power (if applicable): 3^2, 27R3, 6! (27R3 = 3).
-Don't go crazy on the numbers (9999999999999999999999! will probably crash due to memory)
+Don't go crazy on the numbers (think about MAX_INT)
 Decimals, nested brackets, and negative numbers are not allowed,
 and results of operations with / and R will be truncated.
 */
@@ -89,7 +89,7 @@ int readDigit(int target, std::string algoString, int* pos, int len)
 
 bool noFurtherOperation(std::string algoString, int pos, int len, char operation)
 {
-	if (operation == 'R' || operation == '^' || operation == '!')
+	if (operation == 'R' || operation == '^')
 		return true;
 	if (takesPrevalenceOver(operation, algoString[pos]))
 		return true;
@@ -97,18 +97,18 @@ bool noFurtherOperation(std::string algoString, int pos, int len, char operation
 }
 
 struct Operation {
-	Operation(char operation, int firstVal, int secondVal, bool negativ) :
+	Operation(char operation, double firstVal, double secondVal, bool negativ) :
 		operation(operation), firstValue(firstVal), secondValue(secondVal), negative(negativ)
 	{
-		if (negative)
+		if (negative && operation != 'R' && operation != '^')
 			firstValue = firstValue * -1;
 	}
 	char operation;
-	int firstValue, secondValue;
+	double firstValue, secondValue;
 	bool negative;
 };
 
-int doOperation(Operation operation)
+double doOperation(Operation operation)
 {
 	int negative = 1;
 	if (operation.negative)
@@ -124,11 +124,11 @@ int doOperation(Operation operation)
 	case '/':
 		return (operation.firstValue / operation.secondValue) * negative;
 	case '%':
-		return (operation.firstValue % operation.secondValue) * negative;
+		return (fmod(operation.firstValue, operation.secondValue)) * negative;
 	case '^':
-		return pow((double)operation.firstValue, (double)operation.secondValue) * negative;
+		return pow(operation.firstValue, operation.secondValue);
 	case 'R':
-		return pow((double)operation.firstValue, 1/(double)operation.secondValue) * negative;
+		return pow(operation.firstValue, 1/operation.secondValue);
 	default:
 		return 1 * negative;
 	}
@@ -147,16 +147,16 @@ bool checkBracket(bool open, std::string algoString, int* pos)
 	return false;
 }
 
-Operation getOperation(int target, std::string algoString, int pos, int len, int* firstValue, bool isNegative)
+Operation getOperation(int target, std::string algoString, int pos, int len, double* firstValue, bool isNegative)
 {
-	int secondValue = 0;
+	double secondValue = 0;
 	bool bracket = false;
 	bool closeBracket = false;
 	while (pos != len)
 	{
 		bracket = checkBracket(true, algoString, &pos);
 		if (firstValue == nullptr)
-			firstValue = new int(readDigit(target, algoString, &pos, len));
+			firstValue = new double(readDigit(target, algoString, &pos, len));
 		char operation = algoString[pos];
 		pos ++;
 		bool negative = operation == '-';
@@ -166,7 +166,7 @@ Operation getOperation(int target, std::string algoString, int pos, int len, int
 		if (closeBracket || (!bracket && noFurtherOperation(algoString, pos, len, operation)))
 		{
 			if (pos + 1 < len)
-				return getOperation(target, algoString, pos, len, new int(doOperation(Operation(operation, *firstValue, secondValue, false))), isNegative);
+				return getOperation(target, algoString, pos, len, new double(doOperation(Operation(operation, *firstValue, secondValue, false))), isNegative);
 			else
 				return Operation(operation, *firstValue, secondValue, isNegative);
 		}
