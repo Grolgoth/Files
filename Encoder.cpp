@@ -59,6 +59,18 @@ int needSmallerThan(int target)
 	return rand() % target;
 }
 
+int getCompareBasis(int pos, std::string twoInAlgorithm)
+{
+	int result = Algorithm("x=" + twoInAlgorithm + "*(x%10) + 10").execute(pos);
+	while (result > 255)
+		result -= 255;
+	while (result < 0)
+	result += 255;
+	if (result == 0)
+		result = 1;
+	return result;
+}
+
 /**
 Creating an object of Encoder will make a call to srand(),
 might mess up your rand() calls in other threads if you are
@@ -75,21 +87,22 @@ std::string Encoder::encode(std::string target)
 	std::string result = "";
 	for (unsigned int i = 0; i < target.length(); i ++)
 	{
-		int next = Algorithm("x=" + twoInAlgorithm + "*(x%10) + 10").execute(i);
-		while (next > 255)
-			next -= 255;
-		while (next < 0)
-			next += 255;
-		if (next == 0)
-			next = 1;
+		int compareBasis = getCompareBasis(i, twoInAlgorithm);
 		int charVal = intValOfChar(target[i]);
 		int value = algorithm.execute(charVal);
+		if (value < 0)
+		{
+			result += needBiggerOrEqualTo(compareBasis);
+			value = value * -1;
+		}
+		else
+			result += needSmallerThan(compareBasis);
 		while (value > 255)
 		{
-			result += needBiggerOrEqualTo(next);
+			result += needBiggerOrEqualTo(compareBasis);
 			value -= 255;
 		}
-		result += needSmallerThan(next);
+		result += needSmallerThan(compareBasis);
 		result += value;
 	}
 	return result;
@@ -100,30 +113,36 @@ std::string Encoder::decode(std::string target)
 	std::string result = "";
 	int pos = 0;
 	int totalValue = 0;
+	bool checkNegative = true;
+	int negative = 1;
 	for (unsigned int i = 0; i < target.length(); i ++)
 	{
+		int compareBasis = getCompareBasis(pos, twoInAlgorithm);
 		int charVal = intValOfChar(target[i]);
-		int next = Algorithm("x=" + twoInAlgorithm + "*(x%10) + 10").execute(pos);
-		while (next > 255)
-			next -= 255;
-		while (next < 0)
-			next += 255;
-		if (next == 0)
-			next = 1;
-		if (next <= charVal)
-			totalValue += 255;
+		if (checkNegative)
+		{
+			checkNegative = false;
+			if (compareBasis <= charVal)
+				negative = -1;
+			else
+				negative = 1;
+			continue;
+		}
+		if (compareBasis <= charVal)
+			totalValue += 255 * negative;
 		else
 		{
 			i++;
 			if (i >= target.length())
 				throw "Can't decode this string. It was not encoded with an encoder of this type.";
-			totalValue += intValOfChar(target[i]);
+			totalValue += intValOfChar(target[i]) * negative;
 			int decoded = decodeAlgorithm.execute(totalValue);
 			if (decoded < 0 || decoded > 255)
 				throw "Something went wrong decoding this string: invalid char value. Perhaps it was not well encoded.";
 			result += (char)decoded;
 			pos++;
 			totalValue = 0;
+			checkNegative = true;
 		}
 	}
 	return result;
