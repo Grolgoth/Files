@@ -26,7 +26,7 @@ std::string toString(int target)
 		target = target * -1;
 	char buffer[10];
 	int digits = 1;
-	while (target / pow(10, digits - 1) > 10)
+	while (target / pow(10, digits - 1) >= 10)
 		digits++;
 	int originalDigits = digits;
 	for (int i = 1; i < 11; i++)
@@ -34,12 +34,11 @@ std::string toString(int target)
 		double d = pow(10, digits - 1) * i;
 		if (target - d < 0)
 		{
-			cout << "ok: " << digits << " " << i << " " << d << endl;
 			buffer[originalDigits - digits] = i + 47;
 			target -= pow(10, digits - 1) * (i-1);
 			digits --;
 			if (digits != 0)
-				i = 1;
+				i = 0;
 			else
 				break;
 		}
@@ -49,37 +48,15 @@ std::string toString(int target)
 	return result;
 }
 
-int randomChar()
+int needBiggerOrEqualTo(int target)
 {
-	return rand() % 256;
+	int border = 256 - target;
+	return rand() % border + target;
 }
 
-int needBiggerThanTen(int target)
+int needSmallerThan(int target)
 {
-	int ao = randomChar();
-	int a = ao;
-	while (target % a < 10)
-	{
-		if (ao < 128)
-			a ++;
-		else
-			a --;
-	}
-	return a;
-}
-
-int needSmallerThanTen(int target)
-{
-	int ao = randomChar();
-	int a = ao;
-	while (target % a > 10)
-	{
-		if (ao < 128)
-			a ++;
-		else
-			a --;
-	}
-	return a;
+	return rand() % target;
 }
 
 /**
@@ -87,7 +64,7 @@ Creating an object of Encoder will make a call to srand(),
 might mess up your rand() calls in other threads if you are
 using seeds.
 */
-Encoder::Encoder(Algorithm encodeAlgorithm, algorithm decodeAlgorithm) : algorithm(encodeAlgorithm), decodeAlgorithm(decodeAlgorithm)
+Encoder::Encoder(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm) : algorithm(encodeAlgorithm), decodeAlgorithm(decodeAlgorithm)
 {
 	srand(time(nullptr));
 	twoInAlgorithm = toString(algorithm.execute(2));
@@ -98,17 +75,22 @@ std::string Encoder::encode(std::string target)
 	std::string result = "";
 	for (unsigned int i = 0; i < target.length(); i ++)
 	{
+		int next = Algorithm("x=" + twoInAlgorithm + "*(x%10) + 10").execute(i);
+		while (next > 255)
+			next -= 255;
+		while (next < 0)
+			next += 255;
+		if (next == 0)
+			next = 1;
 		int charVal = intValOfChar(target[i]);
 		int value = algorithm.execute(charVal);
 		while (value > 255)
 		{
-			int next = Algorithm("x=" + twoInAlgorithm + "*(x%10)").execute(i);
-			result += needBiggerThanTen(next);
+			result += needBiggerOrEqualTo(next);
 			value -= 255;
 		}
-		int next = Algorithm("x=" + twoInAlgorithm + "*(x%10)").execute(i);
-		result += needSmallerThanTen(next);
-		retult += value;
+		result += needSmallerThan(next);
+		result += value;
 	}
 	return result;
 }
@@ -121,8 +103,14 @@ std::string Encoder::decode(std::string target)
 	for (unsigned int i = 0; i < target.length(); i ++)
 	{
 		int charVal = intValOfChar(target[i]);
-		int next = Algorithm("x=" + twoInAlgorithm +"*(x%10)")).execute(pos);
-		if (next % charVal > 10)
+		int next = Algorithm("x=" + twoInAlgorithm + "*(x%10) + 10").execute(pos);
+		while (next > 255)
+			next -= 255;
+		while (next < 0)
+			next += 255;
+		if (next == 0)
+			next = 1;
+		if (next <= charVal)
 			totalValue += 255;
 		else
 		{
