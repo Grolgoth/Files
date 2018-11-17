@@ -32,7 +32,8 @@ class String {
 		String substring(unsigned int ibegin, int iend = -1);
 		String invert(unsigned int ibegin = 0, int iend = -1);
 		String replace(std::string sfind, std::string target, bool ignoreCase = true, bool all = true, int occurences = 1, bool fromBegin = true);
-		String transform(Algorithm algorithm);
+		String encode(Algorithm algorithm);
+		String decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm);
 		std::vector<int> findAll(std::string find, bool ignoreCase = true, int fromPos = 0);
 		std::vector<String> split(std::string sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 		std::vector<String> split(String sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);

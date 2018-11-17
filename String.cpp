@@ -1,5 +1,6 @@
 #include "String.h"
 #include <regex>
+#include "encoder.h"
 
 String String::fromVector(std::vector<std::string> vect, std::string appendElements)
 {
@@ -218,9 +219,20 @@ String String::replace(std::string sfind, std::string target, bool ignoreCase, b
 	return String(result);
 }
 
-String String::transform(Algorithm algorithm)
+String String::encode(Algorithm algorithm)
 {
-	return *this;
+	if (!algorithm.isValid())
+		throw "Can't perform transformation on String object because provided algorithm is invalid.";
+	Encoder encoder(algorithm, Algorithm("x=1*x"));
+	return String(encoder.encode(base));
+}
+
+String String::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
+{
+	if (!encodeAlgorithm.isValid() || !decodeAlgorithm.isValid())
+		throw "Can't perform transformation on String object because provided algorithm is invalid.";
+	Encoder encoder(encodeAlgorithm, decodeAlgorithm);
+	return String(encoder.decode(base));
 }
 
 std::vector<String> String::split(std::string sfind, bool ignoreCase, bool all, int occurences, bool fromBegin)
