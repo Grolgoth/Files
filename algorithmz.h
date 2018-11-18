@@ -11,6 +11,7 @@ class Algorithm {
 
 		bool isValid();
 		int execute(int in);
+		int getMaxWithinRange(int lowest, int highest);
 
 	private:
 		std::string algorithm;
