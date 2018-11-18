@@ -1,6 +1,7 @@
 #include "file.h"
 #include "defines.h"
 #include "string.h"
+#include "encoder.h"
 #include <sys/stat.h>
 #include <algorithm>
 
@@ -383,13 +384,21 @@ Encodes the file given an algorithm
 */
 void File::encode(Algorithm algorithm)
 {
-	std::vector<std::string> lines;
-	lines = getLines(false);
-	clear();
-	for (std::string line : lines)
+	unsigned int beginpos = 0;
+	std::vector<std::string> pieces;
+	while(!atEOF())
 	{
-		line.push_back('\n');
-		line = String(line).transform(algorithm).toStdString();
-		fputs(line.c_str(), f);
+		std::string piece = String(getFromFile(beginpos, beginpos + 100)).encode(algorithm).toStdString();
+		beginpos += 100;
+		pieces.push_back(piece);
 	}
+	clear();
+	for (std::string piece : pieces)
+		fputs(piece.c_str(), f);
+}
+
+void File::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
+{
+	Encoder encoder(encodeAlgorithm, decodeAlgorithm);
+
 }
