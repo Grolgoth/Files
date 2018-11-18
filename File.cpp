@@ -191,7 +191,21 @@ std::string File::toPlatform(std::string base)
 	if (!platformSpecific)
 		return base;
 	#ifdef OS_Windows
-		base = String(base).replace("\n", "\r\n").toStdString();
+		String baseString(base);
+		if (!baseString.contains("\n"))
+			return base;
+		base = "";
+		std::vector<String> pieces = baseString.split("\n");
+		for (unsigned int i = 0; i < pieces.size(); i++)
+		{
+			if (i + 1 != pieces.size() || baseString.endsWith("\r") || baseString.endsWith("\n"))
+			{
+				if (!pieces[i].endsWith("\r"))
+					base += pieces[i].toStdString() + "\r\n";
+				else
+					base += pieces[i].toStdString() + "\n";
+			}
+		}
 	#endif
 	return base;
 }
