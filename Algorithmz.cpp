@@ -239,3 +239,17 @@ int Algorithm::execute(int target)
 		throw error.c_str();
 	}
 }
+
+int Algorithm::getMaxWithinRange(int lowest, int highest)
+{
+	if (lowest >= highest)
+		throw "Can't check for highest value in algorithm because lowest value provided >= highest value provided in given range";
+	int result = execute(lowest);
+	for (int i = lowest + 1; i < highest + 1; i++)
+	{
+		int outcome = execute(i);
+		if (outcome > result)
+			result = outcome;
+	}
+	return result;
+}

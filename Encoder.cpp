@@ -51,12 +51,18 @@ std::string toString(int target)
 int needBiggerOrEqualTo(int target)
 {
 	int border = 256 - target;
-	return rand() % border + target;
+	int result = rand() % border + target;
+	if (result == 0)
+		return 1;
+	return result;
 }
 
 int needSmallerThan(int target)
 {
-	return rand() % target;
+	int result = rand() % target;
+	if (result == 0)
+		return 1;
+	return result;
 }
 
 int getCompareBasis(int pos, std::string twoInAlgorithm)
@@ -66,8 +72,8 @@ int getCompareBasis(int pos, std::string twoInAlgorithm)
 		result -= 255;
 	while (result < 0)
 	result += 255;
-	if (result == 0)
-		result = 1;
+	if (result < 2)
+		result = 2;
 	return result;
 }
 

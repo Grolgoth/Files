@@ -1,6 +1,7 @@
 #include "file.h"
 #include "defines.h"
 #include "string.h"
+#include "encoder.h"
 #include <sys/stat.h>
 #include <algorithm>
 
@@ -190,7 +191,21 @@ std::string File::toPlatform(std::string base)
 	if (!platformSpecific)
 		return base;
 	#ifdef OS_Windows
-		base = String(base).replace("\n", "\r\n").toStdString();
+		String baseString(base);
+		if (!baseString.contains("\n"))
+			return base;
+		base = "";
+		std::vector<String> pieces = baseString.split("\n");
+		for (unsigned int i = 0; i < pieces.size(); i++)
+		{
+			if (i + 1 != pieces.size() || baseString.endsWith("\r") || baseString.endsWith("\n"))
+			{
+				if (!pieces[i].endsWith("\r"))
+					base += pieces[i].toStdString() + "\r\n";
+				else
+					base += pieces[i].toStdString() + "\n";
+			}
+		}
 	#endif
 	return base;
 }
@@ -383,13 +398,30 @@ Encodes the file given an algorithm
 */
 void File::encode(Algorithm algorithm)
 {
-	std::vector<std::string> lines;
-	lines = getLines(false);
-	clear();
-	for (std::string line : lines)
+	if(exists() && mopen)
 	{
-		line.push_back('\n');
-		line = String(line).transform(algorithm).toStdString();
-		fputs(line.c_str(), f);
+		String file = getFromFile();
+		String fileEncoded = file.encode(algorithm);
+		clear();
+		fputs(fileEncoded.toStdString().c_str(), f);
 	}
+	else if (!exists())
+		throw "Can't encode file because it doesn't exist";
+	else
+		throw "Can't encode file because it isn't open";
+}
+
+void File::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
+{
+	if(exists() && mopen)
+	{
+		String file = getFromFile();
+		String fileDecoded = file.decode(encodeAlgorithm, decodeAlgorithm);
+		clear();
+		fputs(fileDecoded.toStdString().c_str(), f);
+	}
+	else if (!exists())
+		throw "Can't encode file because it doesn't exist";
+	else
+		throw "Can't encode file because it isn't open";
 }

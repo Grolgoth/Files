@@ -34,8 +34,8 @@ class File {
 		void write(String text);
 		void replace(std::string find, std::string target, bool ignoreCase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		void setPos(long pos, bool relativeToCurrentPos = false);
-		void decode(Algorithm algorithm);
 		void encode(Algorithm algorithm);
+		void decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm);
 
 	protected:
 		static std::string executableName;
