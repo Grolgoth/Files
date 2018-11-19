@@ -403,7 +403,6 @@ void File::encode(Algorithm algorithm)
 		String file = getFromFile();
 		String fileEncoded = file.encode(algorithm);
 		clear();
-				std::cout << fileEncoded.toStdString().c_str() << std::endl;
 		fputs(fileEncoded.toStdString().c_str(), f);
 	}
 	else if (!exists())
