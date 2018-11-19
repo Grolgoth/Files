@@ -398,21 +398,31 @@ Encodes the file given an algorithm
 */
 void File::encode(Algorithm algorithm)
 {
-	unsigned int beginpos = 0;
-	std::vector<std::string> pieces;
-	while(!atEOF())
+	if(exists() && mopen)
 	{
-		std::string piece = String(getFromFile(beginpos, beginpos + 100)).encode(algorithm).toStdString();
-		beginpos += 100;
-		pieces.push_back(piece);
+		String file = getFromFile();
+		String fileEncoded = file.encode(algorithm);
+		clear();
+				std::cout << fileEncoded.toStdString().c_str() << std::endl;
+		fputs(fileEncoded.toStdString().c_str(), f);
 	}
-	clear();
-	for (std::string piece : pieces)
-		fputs(piece.c_str(), f);
+	else if (!exists())
+		throw "Can't encode file because it doesn't exist";
+	else
+		throw "Can't encode file because it isn't open";
 }
 
 void File::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
 {
-	Encoder encoder(encodeAlgorithm, decodeAlgorithm);
-
+	if(exists() && mopen)
+	{
+		String file = getFromFile();
+		String fileDecoded = file.decode(encodeAlgorithm, decodeAlgorithm);
+		clear();
+		fputs(fileDecoded.toStdString().c_str(), f);
+	}
+	else if (!exists())
+		throw "Can't encode file because it doesn't exist";
+	else
+		throw "Can't encode file because it isn't open";
 }
