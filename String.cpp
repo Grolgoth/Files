@@ -189,27 +189,6 @@ String String::invert(unsigned int ibegin, int iend)
 	return result;
 }
 
-std::vector<const char*> String::toC_StringArray()
-{
-	std::vector<const char*> result;
-	if (!contains("\0"))
-	{
-		result.push_back(base.c_str());
-		return result;
-	}
-	std::vector<String> pieces = split("\0", false, true);
-	for (unsigned int i = 0; i < pieces.size(); i ++)
-	{
-		result.push_back(pieces[i].toStdString().c_str());
-		if (i + 1 == pieces.size() && endsWith("\0"))
-		{
-			const char* a = new const char('\0');
-			result.push_back(a);
-		}
-	}
-	return result;
-}
-
 std::vector<int> String::findAll(std::string find, bool ignoreCase, int fromPos)
 {
 	std::vector<int> result;
