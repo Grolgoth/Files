@@ -10,8 +10,8 @@ class Encoder {
 
 		std::string encode(std::string target);
 		std::string decode(std::string target);
-
-	protected:
+		inline Algorithm getEncodeAlgorithm(){ return algorithm; }
+		inline Algorithm getDecodeAlgorithm(){ return decodeAlgorithm; }
 
 	private:
 		Algorithm algorithm;

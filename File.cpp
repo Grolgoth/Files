@@ -70,6 +70,12 @@ File::~File()
 		fclose(f);
 }
 
+File::File(const File& other) : mabsoluteFileName(other.mabsoluteFileName), dir(other.dir), mopen(other.mopen), platformSpecific(other.platformSpecific), f(other.f)
+{
+	if (other.mopen)
+		throw "Error: should not call file copy constructor if the File object's stream is opened! (It will be closed in the destructor of the object that's copied)";
+}
+
 bool File::exists()
 {
 	struct stat buffer;
@@ -303,6 +309,16 @@ void File::close()
 	if(mopen)
 		fclose(f);
 	mopen = false;
+}
+
+void File::flush()
+{
+	if(exists() && mopen)
+		fflush(f);
+	else if (!exists())
+		throw "Can't clear file because it doesn't exist";
+	else
+		throw "Can't clear file because it isn't open";
 }
 
 void File::clear()

@@ -12,6 +12,7 @@ class File {
 
 		File(std::string file, bool platformSpecific = true);
 		~File();
+		File(const File& other);
 
 		bool exists();
 		bool isDir();
@@ -29,6 +30,7 @@ class File {
 		void create();
 		void close();
 		void open();
+		void flush();
 		void clear();
 		void write(std::string text);
 		void write(String text);
