@@ -2,14 +2,15 @@
 #include <cstdlib>
 #include <time.h>
 #include <math.h>
+#include "String.h"
 
 /* Here is how it works, you give this thing an algorithm and it will encode your string, each character is put by its integral value
    into the algorithm (if the char is negative then it will be mapped to its hex value (somewhere between 128-255)). If the outcome > 255
    then there will be a marker to note that it is stored in more than one byte, meaning the next char read is still part of this one.
    and of course 255 will be added to the result. If the outcome < 255 then there will be a marker that the next byte is the last of this
-   char. This marker does not cause 255 to be added to the final result. The markers work as following:
-   > 255 maker if : ((outcome of 2 in encode algorithm) * (position %10)) % char > 10
-   < 255 marker if: ((outcome of 2 in encode algorithm) * (position %10)) % char < 10
+   char. This marker does not cause 255 to be added to the final result. The markers work as following these chars will never be 0 ('\0'):
+   > 255 maker if : ((outcome of 2 in encode algorithm) * (position %10)) >= char
+   < 255 marker if: ((outcome of 2 in encode algorithm) * (position %10)) < char
 */
 
 int intValOfChar(char target)
@@ -17,35 +18,6 @@ int intValOfChar(char target)
 	if (target < 0)
 		return 256 + target;
 	return target;
-}
-
-std::string toString(int target)
-{
-	std::string result = "";
-	if (target < 0)
-		target = target * -1;
-	char buffer[10];
-	int digits = 1;
-	while (target / pow(10, digits - 1) >= 10)
-		digits++;
-	int originalDigits = digits;
-	for (int i = 1; i < 11; i++)
-	{
-		double d = pow(10, digits - 1) * i;
-		if (target - d < 0)
-		{
-			buffer[originalDigits - digits] = i + 47;
-			target -= pow(10, digits - 1) * (i-1);
-			digits --;
-			if (digits != 0)
-				i = 0;
-			else
-				break;
-		}
-	}
-	for (int i = 0; i < originalDigits; i ++)
-		result += buffer[i];
-	return result;
 }
 
 int needBiggerOrEqualTo(int target)
@@ -85,7 +57,7 @@ using seeds.
 Encoder::Encoder(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm) : algorithm(encodeAlgorithm), decodeAlgorithm(decodeAlgorithm)
 {
 	srand(time(nullptr));
-	twoInAlgorithm = toString(algorithm.execute(2));
+	twoInAlgorithm = String::fromInt(algorithm.execute(2)).toStdString();
 }
 
 std::string Encoder::encode(std::string target)

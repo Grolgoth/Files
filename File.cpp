@@ -404,7 +404,7 @@ void File::setPos(long pos, bool relativeToCurrentPos)
 		pos += ftell(f);
 	if (pos < 0)
 		throw "Shouldn't set position of file to a negative value";
-	if ((unsigned)pos >= getSize())
+	if ((unsigned)pos > getSize())
 		throw "Can't set file position to something greater than its size.";
 	fseek(f, pos, SEEK_SET);
 }

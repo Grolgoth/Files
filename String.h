@@ -9,6 +9,7 @@ class String {
 	public:
 		static String fromVector(std::vector<String> vect, std::string appendElements = "");
 		static String fromVector(std::vector<std::string> vect, std::string appendElements = "");
+		static String fromInt(int target);
 
 		String(std::string base);
 

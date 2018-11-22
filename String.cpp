@@ -1,5 +1,6 @@
 #include "String.h"
 #include <regex>
+#include <math.h>
 #include "encoder.h"
 
 String String::fromVector(std::vector<std::string> vect, std::string appendElements)
@@ -16,6 +17,35 @@ String String::fromVector(std::vector<String> vect, std::string appendElements)
 	for (String index : vect)
 		resultstr += index.toStdString() + appendElements;
 	return String(resultstr);
+}
+
+String String::fromInt(int target)
+{
+	std::string result = "";
+	if (target < 0)
+		target = target * -1;
+	char buffer[10];
+	int digits = 1;
+	while (target / pow(10, digits - 1) >= 10)
+		digits++;
+	int originalDigits = digits;
+	for (int i = 1; i < 11; i++)
+	{
+		double d = pow(10, digits - 1) * i;
+		if (target - d < 0)
+		{
+			buffer[originalDigits - digits] = i + 47;
+			target -= pow(10, digits - 1) * (i-1);
+			digits --;
+			if (digits != 0)
+				i = 0;
+			else
+				break;
+		}
+	}
+	for (int i = 0; i < originalDigits; i ++)
+		result += buffer[i];
+	return String(result);
 }
 
 String::String(std::string base)
