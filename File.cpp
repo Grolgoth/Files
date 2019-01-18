@@ -293,6 +293,7 @@ void File::create()
 
 void File::open()
 {
+	isDir();
 	if (dir == 'f')
 	{
 		f = fopen(mabsoluteFileName.c_str(), "rb+");
