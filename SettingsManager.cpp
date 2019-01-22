@@ -27,7 +27,11 @@ Settings::Settings(File file, bool isEncoded, Encoder* encoder) : file(file), en
 {
 	this->file.open();
 	if (isEncoded)
+	{
 		this->file.decode(encoder->getEncodeAlgorithm(), encoder->getDecodeAlgorithm());
+		this->file.close();
+		this->file.open();
+	}
 }
 
 Settings::~Settings()
