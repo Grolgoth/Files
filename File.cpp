@@ -56,8 +56,8 @@ File::File(std::string file, bool platformSpecific) : mopen(false), platformSpec
 			file = String(file).substring(3, file.length()).toStdString();
 		}
 		if (String(file).startsWith("./"))
-			file = String(file).replace("./", "/", true, false).toStdString();
-		mabsoluteFileName += file;
+			file = String(file).replace("./", "", true, false).toStdString();
+		mabsoluteFileName += "/" + file;
 	}
 	else // not using relative file name
 		mabsoluteFileName = file;
