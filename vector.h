@@ -58,6 +58,13 @@ class Vector
 			}
 			return true;
 		}
+		bool remove(unsigned int index)
+		{
+			if (index >= base.size())
+				return false;
+			base.erase(base.begin() + index);
+			return true;
+		}
 		bool add(T element, int index = -1)
 		{
 			if (index < 0 || (unsigned)index > base.size())
