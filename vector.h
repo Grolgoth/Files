@@ -1,24 +1,24 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 #include <vector>
-#include <iostream>
-
-using namespace std;
 
 template <class T>
 class Vector
 {
 	public:
-		//Vector(const Vector& other);
-		Vector(bool mustBeUnique = false) : mustBeUnique(mustBeUnique)
-		{
-
-		}
+		Vector(const Vector& other) : base(other.base), mustBeUnique(other.mustBeUnique) {}
+		Vector(bool mustBeUnique = false) : mustBeUnique(mustBeUnique) {}
 		Vector operator+(const Vector& b)
 		{
+			Vector result(*this);
 			for (unsigned int i=0; i<b.base.size(); i++)
 				if(!uniqueCheck(b.base[i]))
-					base.push_back(b.base[i]);
+					result.base.push_back(b.base[i]);
+			return result;
+		}
+		Vector operator==(const Vector& b)
+		{
+			return base == b.base;
 		}
 
 		int getIndex(T element)
@@ -46,7 +46,7 @@ class Vector
 		inline void clear() {base.clear();}
 		bool remove(T element, bool all = true)
 		{
-			int index = contains(element);
+			int index = getIndex(element);
 			if(index == -1)
 				return false;
 			while(index != -1)
@@ -54,7 +54,7 @@ class Vector
 				base.erase(base.begin() + index);
 				if (!all)
 					break;
-				index = contains(element);
+				index = getIndex(element);
 			}
 			return true;
 		}
@@ -62,12 +62,13 @@ class Vector
 		{
 			if (index < 0 || (unsigned)index > base.size())
 				index = base.size();
-			cout << "index: " << index << endl;
 			if (uniqueCheck(element))
 				return false;
 			base.insert(base.begin() + index, element);
 			return true;
 		}
+		inline long size() {return base.size();}
+		inline T get(unsigned int index) {return base[index];}
 
 	private:
 		std::vector<T> base;
