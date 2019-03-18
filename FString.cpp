@@ -124,9 +124,10 @@ int FString::indexOf(std::string sfind, bool ignoreCase, unsigned int fromPos, u
 {
 	if (!fromBegin)
 	{
-		if (invert().indexOf(sfind, ignoreCase, fromPos, occurences) == -1)
+		FString sfindInverted = FString(sfind).invert();
+		if (invert().indexOf(sfindInverted, ignoreCase, fromPos, occurences) == -1)
 			return -1;
-		return base.length() - 1 - invert().indexOf(sfind, ignoreCase, fromPos, occurences);
+		return base.length() - 1 - invert().indexOf(sfindInverted, ignoreCase, fromPos, occurences);
 	}
 	int result = -1;
 	if (base.length() < sfind.length() || occurences < 1)
@@ -272,8 +273,9 @@ std::vector<FString> FString::split(std::string sfind, bool ignoreCase, bool all
 		return result;
 	if (!fromBegin && !all)
 	{
+		FString findInverted = FString(sfind).invert();
 		FString inverted = invert();
-		result = inverted.split(sfind, ignoreCase, all, occurences);
+		result = inverted.split(findInverted.toStdString(), ignoreCase, all, occurences);
 		for (unsigned int i = 0; i < result.size(); i ++)
 			result[i] = result[i].invert();
 		std::reverse(result.begin(), result.end());
