@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <time.h>
 #include <math.h>
-#include "String.h"
+#include "fstring.h"
 
 /* Here is how it works, you give this thing an algorithm and it will encode your string, each character is put by its integral value
    into the algorithm (if the char is negative then it will be mapped to its hex value (somewhere between 128-255)). If the outcome > 255
@@ -57,7 +57,7 @@ using seeds.
 Encoder::Encoder(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm) : algorithm(encodeAlgorithm), decodeAlgorithm(decodeAlgorithm)
 {
 	srand(time(nullptr));
-	twoInAlgorithm = String::fromInt(algorithm.execute(2)).toStdString();
+	twoInAlgorithm = FString::fromInt(algorithm.execute(2)).toStdString();
 }
 
 std::string Encoder::encode(std::string target)

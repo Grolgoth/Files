@@ -1,5 +1,5 @@
 #include "algorithmz.h"
-#include "String.h"
+#include "fstring.h"
 #include <cmath>
 
 /**
@@ -61,37 +61,37 @@ bool takesPrevalenceOver(char operation, char target)
 	return false;
 }
 
-std::string toString(char c)
+std::string toFString(char c)
 {
 	std::string result = "";
 	result += c;
 	return result;
 }
 
-int readDigit(int target, std::string algoString, int* pos, int len)
+int readDigit(int target, std::string algoFString, int* pos, int len)
 {
-	char c = algoString[*pos];
+	char c = algoFString[*pos];
 	++ *pos;
 	if (c == 'X')
 		return target;
 	else
 	{
-		int result = atoi(toString(c).c_str());
-		while (*pos < len && isdigit(algoString[*pos]))
+		int result = atoi(toFString(c).c_str());
+		while (*pos < len && isdigit(algoFString[*pos]))
 		{
-			c = algoString[*pos];
+			c = algoFString[*pos];
 			++ *pos;
-			result = result * 10 + atoi(toString(c).c_str());
+			result = result * 10 + atoi(toFString(c).c_str());
 		}
 		return result;
 	}
 }
 
-bool noFurtherOperation(std::string algoString, int pos, int len, char operation)
+bool noFurtherOperation(std::string algoFString, int pos, int len, char operation)
 {
 	if (operation == 'R' || operation == '^')
 		return true;
-	if (takesPrevalenceOver(operation, algoString[pos]))
+	if (takesPrevalenceOver(operation, algoFString[pos]))
 		return true;
 	return pos + 1 >= len;
 }
@@ -134,12 +134,12 @@ double doOperation(Operation operation)
 	}
 }
 
-bool checkBracket(bool open, std::string algoString, int* pos)
+bool checkBracket(bool open, std::string algoFString, int* pos)
 {
 	char type = '(';
 	if (!open)
 		type = ')';
-	if (algoString[*pos] == type)
+	if (algoFString[*pos] == type)
 	{
 		++ *pos;
 		return true;
@@ -147,31 +147,31 @@ bool checkBracket(bool open, std::string algoString, int* pos)
 	return false;
 }
 
-Operation getOperation(int target, std::string algoString, int pos, int len, double* firstValue, bool isNegative)
+Operation getOperation(int target, std::string algoFString, int pos, int len, double* firstValue, bool isNegative)
 {
 	double secondValue = 0;
 	bool bracket = false;
 	bool closeBracket = false;
 	while (pos != len)
 	{
-		bracket = checkBracket(true, algoString, &pos);
+		bracket = checkBracket(true, algoFString, &pos);
 		if (firstValue == nullptr)
-			firstValue = new double(readDigit(target, algoString, &pos, len));
-		char operation = algoString[pos];
+			firstValue = new double(readDigit(target, algoFString, &pos, len));
+		char operation = algoFString[pos];
 		pos ++;
 		bool negative = operation == '-';
-		bracket = checkBracket(true, algoString, &pos);
-		secondValue = readDigit(target, algoString, &pos, len);
-		closeBracket = checkBracket(false, algoString, &pos);
-		if (closeBracket || (!bracket && noFurtherOperation(algoString, pos, len, operation)))
+		bracket = checkBracket(true, algoFString, &pos);
+		secondValue = readDigit(target, algoFString, &pos, len);
+		closeBracket = checkBracket(false, algoFString, &pos);
+		if (closeBracket || (!bracket && noFurtherOperation(algoFString, pos, len, operation)))
 		{
 			if (pos + 1 < len)
-				return getOperation(target, algoString, pos, len, new double(doOperation(Operation(operation, *firstValue, secondValue, false))), isNegative);
+				return getOperation(target, algoFString, pos, len, new double(doOperation(Operation(operation, *firstValue, secondValue, false))), isNegative);
 			else
 				return Operation(operation, *firstValue, secondValue, isNegative);
 		}
 		else
-			return Operation(operation, *firstValue, doOperation(getOperation(target, algoString, pos, len, &secondValue, negative)), isNegative);
+			return Operation(operation, *firstValue, doOperation(getOperation(target, algoFString, pos, len, &secondValue, negative)), isNegative);
 	}
 	throw "Could not create operation because algorithm is incomplete";
 }
@@ -182,16 +182,16 @@ bool Algorithm::isValid()
 	bool digitOk = true;
 	bool bracketOk = true;
 	int brackets = 0;
-	String algoString(algorithm);
-	algoString = algoString.replace(" ", "");
-	if (!String(algorithm).startsWith("X="))
+	FString algoFString(algorithm);
+	algoFString = algoFString.replace(" ", "");
+	if (!FString(algorithm).startsWith("X="))
 		return false;
-	algoString = algoString.substring(2);
-	int len = algoString.toStdString().length();
+	algoFString = algoFString.substring(2);
+	int len = algoFString.toStdString().length();
 	int pos = 0;
 	while (pos != len)
 	{
-		char c = algoString.toStdString()[pos];
+		char c = algoFString.toStdString()[pos];
 		pos ++;
 		if (!charIsLegal(c) || (needsReferenceUpFront(c) != gotRef && !isdigit(c)) || (isdigit(c) && !digitOk))
 			return false;
@@ -229,7 +229,7 @@ int Algorithm::execute(int target)
 {
 	if (isValid())
 	{
-		std::string algoString = String(algorithm).replace(" ", "").substring(2).toStdString();
+		std::string algoString = FString(algorithm).replace(" ", "").substring(2).toStdString();
 		Operation operation = getOperation(target, algoString, 0, algoString.length(), nullptr, false);
 		return doOperation(operation);
 	}

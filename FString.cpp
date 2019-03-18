@@ -1,25 +1,25 @@
-#include "String.h"
+#include "fstring.h"
 #include <regex>
 #include <math.h>
 #include "encoder.h"
 
-String String::fromVector(std::vector<std::string> vect, std::string appendElements)
+FString FString::fromVector(std::vector<std::string> vect, std::string appendElements)
 {
 	std::string result = "";
 	for (std::string index : vect)
 		result += index + appendElements;
-	return String(result);
+	return FString(result);
 }
 
-String String::fromVector(std::vector<String> vect, std::string appendElements)
+FString FString::fromVector(std::vector<FString> vect, std::string appendElements)
 {
 	std::string resultstr = "";
-	for (String index : vect)
+	for (FString index : vect)
 		resultstr += index.toStdString() + appendElements;
-	return String(resultstr);
+	return FString(resultstr);
 }
 
-String String::fromInt(int target)
+FString FString::fromInt(int target)
 {
 	std::string result = "";
 	if (target < 0)
@@ -45,25 +45,25 @@ String String::fromInt(int target)
 	}
 	for (int i = 0; i < originalDigits; i ++)
 		result += buffer[i];
-	return String(result);
+	return FString(result);
 }
 
-String::String(std::string base)
+FString::FString(std::string base)
 {
 	this->base = base;
 }
 
-String String::operator+(const String& b)
+FString FString::operator+(const FString& b)
 {
-	return String(base + b.base);
+	return FString(base + b.base);
 }
 
-bool String::operator!=(const String& b)
+bool FString::operator!=(const FString& b)
 {
 	return base != b.base;
 }
 
-bool String::toBool()
+bool FString::toBool()
 {
 	if (base == "true")
 		return true;
@@ -73,54 +73,54 @@ bool String::toBool()
 		throw "Can't convert " + base + " to a boolean because it is not equal to either false, or true";
 }
 
-bool String::contains(std::string sfind, bool ignoreCase)
+bool FString::contains(std::string sfind, bool ignoreCase)
 {
 	return indexOf(sfind, ignoreCase) > -1;
 }
 
-bool String::contains(String sfind, bool ignoreCase)
+bool FString::contains(FString sfind, bool ignoreCase)
 {
 	return indexOf(sfind, ignoreCase) > -1;
 }
 
-bool String::containsRegex(std::string sregex)
+bool FString::containsRegex(std::string sregex)
 {
 	return std::regex_match(base, std::regex(sregex));
 }
 
-bool String::startsWith(std::string prefix, bool ignoreCase)
+bool FString::startsWith(std::string prefix, bool ignoreCase)
 {
 	return indexOf(prefix, ignoreCase) == 0;
 }
 
-bool String::startsWith(String prefix, bool ignoreCase)
+bool FString::startsWith(FString prefix, bool ignoreCase)
 {
 	return startsWith(prefix.toStdString());
 }
 
-bool String::endsWith(std::string suffix, bool ignoreCase)
+bool FString::endsWith(std::string suffix, bool ignoreCase)
 {
 	if (suffix.length() > base.length())
 		return false;
 	return indexOf(suffix, ignoreCase) == (int)(base.length() - suffix.length());
 }
 
-bool String::endsWith(String suffix, bool ignoreCase)
+bool FString::endsWith(FString suffix, bool ignoreCase)
 {
 	return endsWith(suffix.toStdString());
 }
 
-int String::compare(std::string other)
+int FString::compare(std::string other)
 {
 	return base.compare(other);
 }
 
-int String::compare(String other)
+int FString::compare(FString other)
 {
 	return compare(other.toStdString());
 }
 
-int String::indexOf(std::string sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
+int FString::indexOf(std::string sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
 {
 	if (!fromBegin)
 	{
@@ -153,12 +153,12 @@ int String::indexOf(std::string sfind, bool ignoreCase, unsigned int fromPos, un
 	return result;
 }
 
-int String::indexOf(String sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
+int FString::indexOf(FString sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
 {
 	return indexOf(sfind.toStdString(), ignoreCase, fromPos);
 }
 
-int String::toInt()
+int FString::toInt()
 {
     try
     {
@@ -173,7 +173,7 @@ int String::toInt()
     }
 }
 
-char* String::toCharArray()
+char* FString::toCharArray()
 {
 	char* carray = new char[base.length()];
 	for (unsigned int i = 0; i < base.length(); i ++)
@@ -181,12 +181,12 @@ char* String::toCharArray()
 	return carray;
 }
 
-std::string String::toStdString() const
+std::string FString::toStdString() const
 {
 	return base;
 }
 
-String String::substring(unsigned int ibegin, int iend)
+FString FString::substring(unsigned int ibegin, int iend)
 {
 	unsigned int uiend = base.length();
 	if (iend >= 0)
@@ -196,30 +196,30 @@ String String::substring(unsigned int ibegin, int iend)
 		return result;
 	for (unsigned int i = ibegin; i < uiend; i++)
 		result += base[i];
-	String resultToCopy(result);
+	FString resultToCopy(result);
 	return resultToCopy;
 }
 
-String String::invert(unsigned int ibegin, int iend)
+FString FString::invert(unsigned int ibegin, int iend)
 {
 	unsigned int uiend = base.length();
 	if (iend >= 0)
 		uiend = (unsigned)iend;
 	std::string resultstr = "";
 	if (ibegin >= base.length() || uiend <= ibegin || uiend > base.length())
-		return String(resultstr);
+		return FString(resultstr);
 	char* invSeg = substring(ibegin, uiend).toCharArray();
 	for (int i = uiend - ibegin - 1; i > -1; i --)
 		resultstr += invSeg[i];
-	String result("");
+	FString result("");
 	if (ibegin > 0)
 		result = result + substring(0, ibegin);
-	result = result + String(resultstr);
+	result = result + FString(resultstr);
 	result = result + substring(uiend);
 	return result;
 }
 
-std::vector<int> String::findAll(std::string find, bool ignoreCase, int fromPos)
+std::vector<int> FString::findAll(std::string find, bool ignoreCase, int fromPos)
 {
 	std::vector<int> result;
 	int occurences = 1;
@@ -234,45 +234,45 @@ std::vector<int> String::findAll(std::string find, bool ignoreCase, int fromPos)
 	return result;
 }
 
-String String::replace(std::string sfind, std::string target, bool ignoreCase, bool all, int occurences, bool fromBegin)
+FString FString::replace(std::string sfind, std::string target, bool ignoreCase, bool all, int occurences, bool fromBegin)
 {
 	std::string result = "";
-	std::vector<String> split = this->split(sfind, ignoreCase, all, occurences, fromBegin);
+	std::vector<FString> split = this->split(sfind, ignoreCase, all, occurences, fromBegin);
 	if (split.empty())
 		return *this;
-	for (String index : split)
+	for (FString index : split)
 	{
 		result += index.toStdString();
 		if (index != split.back())
 			result += target;
 	}
-	return String(result);
+	return FString(result);
 }
 
-String String::encode(Algorithm algorithm)
+FString FString::encode(Algorithm algorithm)
 {
 	if (!algorithm.isValid())
 		throw "Can't perform transformation on String object because provided algorithm is invalid.";
 	Encoder encoder(algorithm, Algorithm("x=1*x"));
-	return String(encoder.encode(base));
+	return FString(encoder.encode(base));
 }
 
-String String::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
+FString FString::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
 {
 	if (!encodeAlgorithm.isValid() || !decodeAlgorithm.isValid())
 		throw "Can't perform transformation on String object because provided algorithm is invalid.";
 	Encoder encoder(encodeAlgorithm, decodeAlgorithm);
-	return String(encoder.decode(base));
+	return FString(encoder.decode(base));
 }
 
-std::vector<String> String::split(std::string sfind, bool ignoreCase, bool all, int occurences, bool fromBegin)
+std::vector<FString> FString::split(std::string sfind, bool ignoreCase, bool all, int occurences, bool fromBegin)
 {
-	std::vector<String> result;
+	std::vector<FString> result;
 	if (!contains(sfind, ignoreCase) || occurences < 1)
 		return result;
 	if (!fromBegin && !all)
 	{
-		String inverted = invert();
+		FString inverted = invert();
 		result = inverted.split(sfind, ignoreCase, all, occurences);
 		for (unsigned int i = 0; i < result.size(); i ++)
 			result[i] = result[i].invert();
@@ -290,9 +290,9 @@ std::vector<String> String::split(std::string sfind, bool ignoreCase, bool all, 
 		{
 			while (result.back().contains(sfind, ignoreCase) && (all || occurences > 1 ))
 			{
-				std::vector<String> temp = result.back().split(sfind, ignoreCase);
+				std::vector<FString> temp = result.back().split(sfind, ignoreCase);
 				result.pop_back();
-				for (String index : temp)
+				for (FString index : temp)
 					result.push_back(index);
 				occurences --;
 			}
@@ -301,7 +301,7 @@ std::vector<String> String::split(std::string sfind, bool ignoreCase, bool all, 
 	return result;
 }
 
-std::vector<String> String::split(String sfind, bool ignoreCase, bool all, int occurences, bool fromBegin)
+std::vector<FString> FString::split(FString sfind, bool ignoreCase, bool all, int occurences, bool fromBegin)
 {
 	return split(sfind.toStdString(), ignoreCase, all, occurences, fromBegin);
 }

@@ -3,7 +3,9 @@
 
 #include <iostream>
 #include <vector>
-#include "string.h"
+
+class FString;
+class Algorithm;
 
 class File {
 	public:
@@ -33,7 +35,7 @@ class File {
 		void flush();
 		void clear();
 		void write(std::string text);
-		void write(String text);
+		void write(FString text);
 		void replace(std::string find, std::string target, bool ignoreCase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		void setPos(long pos, bool relativeToCurrentPos = false);
 		void encode(Algorithm algorithm);

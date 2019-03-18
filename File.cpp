@@ -1,6 +1,6 @@
 #include "file.h"
 #include "defines.h"
-#include "string.h"
+#include "fstring.h"
 #include "encoder.h"
 #include <sys/stat.h>
 #include <algorithm>
@@ -17,7 +17,7 @@ std::string File::executableName;
 std::string File::getPathToExe()
 {
 	if(!executableName.empty())
-		return String(executableName).split("/", true, false, 1, false)[0].toStdString();
+		return FString(executableName).split("/", true, false, 1, false)[0].toStdString();
 	std::string result = "UNDEFINED";
 	#ifdef OS_Windows
 		#ifdef UNICODE
@@ -35,8 +35,8 @@ std::string File::getPathToExe()
 		ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
 		result = std::string( result, (count > 0) ? count : 0 );
 	#endif
-	executableName = String(result).replace("\\", "/").toStdString();
-	return String(executableName).split("/", true, false, 1, false)[0].toStdString();
+	executableName = FString(result).replace("\\", "/").toStdString();
+	return FString(executableName).split("/", true, false, 1, false)[0].toStdString();
 }
 
 /**
@@ -45,18 +45,18 @@ newline characters to \r\n for windows systems when performing write operations.
 */
 File::File(std::string file, bool platformSpecific) : mopen(false), platformSpecific(platformSpecific)
 {
-	if (String(file).startsWith("./") || String(file).startsWith("../") || !String(file).contains("/"))
+	if (FString(file).startsWith("./") || FString(file).startsWith("../") || !FString(file).contains("/"))
 	{
 		mabsoluteFileName = getPathToExe();
-		while(String(file).startsWith("../"))
+		while(FString(file).startsWith("../"))
 		{
-			std::vector<String> split = String(mabsoluteFileName).split("/", true, false, 1, false);
+			std::vector<FString> split = FString(mabsoluteFileName).split("/", true, false, 1, false);
 			if (!split.empty())
 				mabsoluteFileName = split[0].toStdString();
-			file = String(file).substring(3, file.length()).toStdString();
+			file = FString(file).substring(3, file.length()).toStdString();
 		}
-		if (String(file).startsWith("./"))
-			file = String(file).replace("./", "", true, false).toStdString();
+		if (FString(file).startsWith("./"))
+			file = FString(file).replace("./", "", true, false).toStdString();
 		mabsoluteFileName += "/" + file;
 	}
 	else // not using relative file name
@@ -128,15 +128,15 @@ unsigned long File::getSize()
 
 std::string File::getFileName()
 {
-	if (String(mabsoluteFileName).contains("/"))
-		return String(mabsoluteFileName).split("/", true, false, 1, false)[1].toStdString();
+	if (FString(mabsoluteFileName).contains("/"))
+		return FString(mabsoluteFileName).split("/", true, false, 1, false)[1].toStdString();
 	return mabsoluteFileName;
 }
 
 std::string File::getPath()
 {
-	if (String(mabsoluteFileName).contains("/"))
-		return String(mabsoluteFileName).split("/", true, false, 1, false)[0].toStdString();
+	if (FString(mabsoluteFileName).contains("/"))
+		return FString(mabsoluteFileName).split("/", true, false, 1, false)[0].toStdString();
 	return mabsoluteFileName;
 }
 
@@ -197,11 +197,11 @@ std::string File::toPlatform(std::string base)
 	if (!platformSpecific)
 		return base;
 	#ifdef OS_Windows
-		String baseString(base);
+		FString baseString(base);
 		if (!baseString.contains("\n"))
 			return base;
 		base = "";
-		std::vector<String> pieces = baseString.split("\n");
+		std::vector<FString> pieces = baseString.split("\n");
 		for (unsigned int i = 0; i < pieces.size(); i++)
 		{
 			if (i + 1 != pieces.size() || baseString.endsWith("\r") || baseString.endsWith("\n"))
@@ -237,20 +237,20 @@ std::vector<long> File::findAll(std::string find, bool ignoreCase, bool all, int
 		lines = getLines(false);
 		fromPos = 0;
 	}
-	std::string allstr = String::fromVector(lines, "\n").toStdString();
+	std::string allstr = FString::fromVector(lines, "\n").toStdString();
 	if (fromPos != -1 && until != -1)
-		allstr = String(allstr).substring(0, until - fromPos).toStdString();
+		allstr = FString(allstr).substring(0, until - fromPos).toStdString();
 	if (!all)
 	{
 		while (occurences > 0)
 		{
-			indexes.push_back(String(allstr).indexOf(find, ignoreCase, 0, occurences) + fromPos);
+			indexes.push_back(FString(allstr).indexOf(find, ignoreCase, 0, occurences) + fromPos);
 			occurences --;
 		}
 		std::reverse(indexes.begin(), indexes.end());
 		return indexes;
 	}
-	for(int index : String(allstr).findAll(find, ignoreCase))
+	for(int index : FString(allstr).findAll(find, ignoreCase))
 		indexes.push_back(index + fromPos);
 	return indexes;
 }
@@ -346,7 +346,7 @@ void File::write(std::string text)
 		fputs(text.c_str(), f);
 		if (!rest.empty())
 		{
-			std::string all = String::fromVector(rest, "\n").toStdString();
+			std::string all = FString::fromVector(rest, "\n").toStdString();
 			fputs(all.c_str(), f);
 		}
 		fseek(f, mempos + text.length(), SEEK_SET);
@@ -373,28 +373,28 @@ void File::replace(std::string find, std::string target, bool ignoreCase, bool a
 	else
 		lines = getLines(false);
 	target = toPlatform(target);
-	std::string allstr = String::fromVector(lines, "\n").toStdString();
+	std::string allstr = FString::fromVector(lines, "\n").toStdString();
 	if (fromPos != -1)
 	{
 		if (until < 0)
 			until = allstr.length();
 		if ((unsigned)until > allstr.length())
 			throw "Can't execute replace operation because the end position specified is greater than the file length.";
-		std::string first = String(allstr).substring(0, until - fromPos)
+		std::string first = FString(allstr).substring(0, until - fromPos)
 			.replace(find, target, ignoreCase, all, occurences, true)
 			.toStdString();
-		std::string second = String(allstr).substring(until - fromPos)
+		std::string second = FString(allstr).substring(until - fromPos)
 			.toStdString();
 		std::string before = getFromFile(0, fromPos);
 		allstr = before + first + second;
 	}
 	else
-		allstr = String(allstr).replace(find, target, ignoreCase, all, occurences, true).toStdString();
+		allstr = FString(allstr).replace(find, target, ignoreCase, all, occurences, true).toStdString();
 	clear();
 	fputs(allstr.c_str(), f);
 }
 
-void File::write(String text)
+void File::write(FString text)
 {
 	write(text.toStdString());
 }
@@ -417,8 +417,8 @@ void File::encode(Algorithm algorithm)
 {
 	if(exists() && mopen)
 	{
-		String file = getFromFile();
-		String fileEncoded = file.encode(algorithm);
+		FString file = getFromFile();
+		FString fileEncoded = file.encode(algorithm);
 		clear();
 		fputs(fileEncoded.toStdString().c_str(), f);
 	}
@@ -432,8 +432,8 @@ void File::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
 {
 	if(exists() && mopen)
 	{
-		String file = getFromFile();
-		String fileDecoded = file.decode(encodeAlgorithm, decodeAlgorithm);
+		FString file = getFromFile();
+		FString fileDecoded = file.decode(encodeAlgorithm, decodeAlgorithm);
 		clear();
 		fputs(fileDecoded.toStdString().c_str(), f);
 	}
