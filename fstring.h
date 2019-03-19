@@ -28,6 +28,7 @@ class FString {
 		int indexOf(std::string sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);
 		int indexOf(FString sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);
 		int toInt();
+		char charAt(unsigned int index);
 		char* toCharArray();
 		std::string toStdString() const;
 		FString substring(unsigned int ibegin, int iend = -1);

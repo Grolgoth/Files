@@ -23,7 +23,10 @@ FString FString::fromInt(int target)
 {
 	std::string result = "";
 	if (target < 0)
+	{
+		result += "-";
 		target = target * -1;
+	}
 	char buffer[10];
 	int digits = 1;
 	while (target / pow(10, digits - 1) >= 10)
@@ -172,6 +175,13 @@ int FString::toInt()
 		else
 			throw "Can't convert " + base + " to an integer. Unknown error during conversion.";
     }
+}
+
+char FString::charAt(unsigned int index)
+{
+	if (index >= base.length())
+		throw "Can't return char at position " + fromInt(index).toStdString() + " for string " + base + " because the index specified is bigger than its length.";
+	return base[index];
 }
 
 char* FString::toCharArray()
