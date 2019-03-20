@@ -23,6 +23,7 @@ class FString {
 		bool startsWith(FString prefix, bool ignoreCase = true);
 		bool endsWith(std::string suffix, bool ignoreCase = true);
 		bool endsWith(FString suffix, bool ignoreCase = true);
+		bool allDigits();
 		int compare(std::string other);
 		int compare(FString other);
 		int indexOf(std::string sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);
@@ -36,7 +37,7 @@ class FString {
 		FString replace(std::string sfind, std::string target, bool ignoreCase = true, bool all = true, int occurences = 1, bool fromBegin = true);
 		FString encode(Algorithm algorithm);
 		FString decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm);
-		std::vector<int> findAll(std::string find, bool ignoreCase = true, int fromPos = 0);
+		std::vector<unsigned int> findAll(std::string find, bool ignoreCase = true, int fromPos = 0);
 		std::vector<FString> split(std::string sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 		std::vector<FString> split(FString sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 

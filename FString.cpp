@@ -113,6 +113,16 @@ bool FString::endsWith(FString suffix, bool ignoreCase)
 	return endsWith(suffix.toStdString());
 }
 
+bool FString::allDigits()
+{
+	for (unsigned int i = 0; i < base.length(); i++)
+	{
+		if (!isdigit(base[i]))
+			return false;
+	}
+	return true;
+}
+
 int FString::compare(std::string other)
 {
 	return base.compare(other);
@@ -230,9 +240,9 @@ FString FString::invert(unsigned int ibegin, int iend)
 	return result;
 }
 
-std::vector<int> FString::findAll(std::string find, bool ignoreCase, int fromPos)
+std::vector<unsigned int> FString::findAll(std::string find, bool ignoreCase, int fromPos)
 {
-	std::vector<int> result;
+	std::vector<unsigned int> result;
 	int occurences = 1;
 	while (true)
 	{

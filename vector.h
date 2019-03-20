@@ -6,6 +6,13 @@ template <class T>
 class Vector
 {
 	public:
+		static Vector fromStdVector(std::vector<T> vect, bool mustBeUnique = false)
+		{
+			Vector result(mustBeUnique);
+			result.base = vect;
+			return result;
+		}
+
 		Vector(const Vector& other) : base(other.base), mustBeUnique(other.mustBeUnique) {}
 		Vector(bool mustBeUnique = false) : mustBeUnique(mustBeUnique) {}
 		Vector operator+(const Vector& b)
