@@ -16,6 +16,7 @@ class FString {
 		FString operator+(const FString& b);
 		bool operator!=(const FString& b);
 		bool toBool();
+		bool isEmpty();
 		bool contains(std::string sfind, bool ignoreCase = true);
 		bool contains(FString sfind, bool ignoreCase = true);
 		bool containsRegex(std::string sregex);
@@ -24,6 +25,7 @@ class FString {
 		bool endsWith(std::string suffix, bool ignoreCase = true);
 		bool endsWith(FString suffix, bool ignoreCase = true);
 		bool allDigits();
+		unsigned int length();
 		int compare(std::string other);
 		int compare(FString other);
 		int indexOf(std::string sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);

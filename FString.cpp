@@ -76,6 +76,11 @@ bool FString::toBool()
 		throw "Can't convert " + base + " to a boolean because it is not equal to either false, or true";
 }
 
+bool FString::isEmpty()
+{
+	return base.length() == 0;
+}
+
 bool FString::contains(std::string sfind, bool ignoreCase)
 {
 	return indexOf(sfind, ignoreCase) > -1;
@@ -121,6 +126,11 @@ bool FString::allDigits()
 			return false;
 	}
 	return true;
+}
+
+unsigned int FString::length()
+{
+	return base.length();
 }
 
 int FString::compare(std::string other)
