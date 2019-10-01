@@ -1,6 +1,7 @@
 #include "algorithmz.h"
 #include "fstring.h"
 #include <cmath>
+#include <stdlib.h>
 
 /**
 Represents an algorithm, based on the algorithm parameter.

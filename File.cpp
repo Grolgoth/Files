@@ -7,7 +7,7 @@
 
 #ifdef OS_Windows
 #include "windows.h"
-#include "minwindef.h"
+#include "windef.h"
 #elif defined(OS_Linux)
 
 #endif
@@ -156,7 +156,7 @@ std::string File::readline()
 		{
 			c = fgetc(f);
 			if(c != EOF && c != '\n')
-				buffer[pos++] = (char)c;
+				buffer[pos++] = (unsigned char)c;
 			if(pos >= size - 1)
 			{
 				size *=2;
