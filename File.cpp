@@ -39,6 +39,34 @@ std::string File::getPathToExe()
 	return FString(executableName).split("/", true, false, 1, false)[0].toStdString();
 }
 
+std::vector<std::string> File::getFilesInDir(std::string path)
+{
+	std::vector<std::string> result;
+	#ifdef OS_Windows
+	std::string pattern(path);
+    pattern.append("\\*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind;
+    if ((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE)
+	{
+        do
+        {
+            result.push_back(data.cFileName);
+        } while (FindNextFile(hFind, &data) != 0);
+        FindClose(hFind);
+    }
+    #elif defined(OS_Linux)
+	DIR* dirp = opendir(path.c_str());
+	struct dirent * dp;
+    while ((dp = readdir(dirp)) != nullptr)
+	{
+		result.push_back(dp->d_name);
+	}
+	closedir(dirp);
+	#endif
+	return result;
+}
+
 /**
 Represents a file to read and write to. If platformSpecific = true it will convert
 newline characters to \r\n for windows systems when performing write operations.
@@ -211,6 +239,8 @@ std::string File::toPlatform(std::string base)
 				else
 					base += pieces[i].toStdString() + "\n";
 			}
+			else
+				base += pieces[i].toStdString();
 		}
 	#endif
 	return base;
@@ -289,6 +319,18 @@ void File::create()
 	}
 	else
 		throw "Can't create file because it already exists";
+}
+
+void File::createDir()
+{
+	if (!exists())
+	{
+		#ifdef OS_windows
+		CreateDirectory(getAbsolutePath(), nullptr);
+		#endif
+	}
+	else
+		throw "Can't create directory because it already exists";
 }
 
 void File::open()
