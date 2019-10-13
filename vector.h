@@ -51,7 +51,7 @@ class Vector
 			return true;
 		}
 		inline void clear() {base.clear();}
-		bool remove(T element, bool all = true)
+		bool removeElement(T element, bool all = true)
 		{
 			int index = getIndex(element);
 			if(index == -1)

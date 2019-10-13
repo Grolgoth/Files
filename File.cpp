@@ -183,7 +183,7 @@ std::string File::readline()
 		do
 		{
 			c = fgetc(f);
-			if(c != EOF && c != '\n')
+			if(c != EOF && c != '\n' && c!= '\r')
 				buffer[pos++] = (unsigned char)c;
 			if(pos >= size - 1)
 			{
