@@ -34,11 +34,11 @@ FString FString::fromInt(int target)
 	int originalDigits = digits;
 	for (int i = 1; i < 11; i++)
 	{
-		double d = pow(10, digits - 1) * i;
+		int d = pow(10, digits - 1) * i;
 		if (target - d < 0)
 		{
 			buffer[originalDigits - digits] = i + 47;
-			target -= pow(10, digits - 1) * (i-1);
+			target -= floor(pow(10, digits - 1) * (i-1));
 			digits --;
 			if (digits != 0)
 				i = 0;

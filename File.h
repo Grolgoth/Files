@@ -11,7 +11,6 @@ class File {
 	public:
 
 		static std::string getPathToExe();
-		static std::vector<std::string> getFilesInDir(std::string path);
 
 		File(std::string file, bool platformSpecific = true);
 		~File();
@@ -30,6 +29,7 @@ class File {
 		std::string getFromFile(unsigned long beginpos = 0, unsigned long endpos = 0);
 		std::vector<long> findAll(std::string find, bool ignoreCase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		std::vector<std::string> getLines(bool fromCurrentPos);
+		std::vector<std::string> getFilesInDir();
 		void create();
 		void createDir();
 		void close();

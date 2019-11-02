@@ -39,8 +39,11 @@ std::string File::getPathToExe()
 	return FString(executableName).split("/", true, false, 1, false)[0].toStdString();
 }
 
-std::vector<std::string> File::getFilesInDir(std::string path)
+std::vector<std::string> File::getFilesInDir()
 {
+	if (!exists() || !isDir())
+		throw "Can't files from dir " + getAbsolutePath() + " because it either doesn't exists or isn't a directory";
+	std::string path = getAbsolutePath();
 	std::vector<std::string> result;
 	#ifdef OS_Windows
 	std::string pattern(path);

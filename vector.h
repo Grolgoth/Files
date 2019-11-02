@@ -84,6 +84,7 @@ class Vector
 		inline long size() {return base.size();}
 		inline std::vector<T> toStdVector() {return base;}
 		inline T get(unsigned int index) {return base[index];}
+		inline T getBack() {return base.back();}
 
 	private:
 		std::vector<T> base;
