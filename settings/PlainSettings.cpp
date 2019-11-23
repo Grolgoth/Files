@@ -208,7 +208,7 @@ std::string resolveKey(FString keystr, std::string* currentSet, std::vector<std:
 		FString result(findLine(keystr.toStdString(), *currentSet, reservedLines));
 		if (result.toStdString() == "")
 			return result.toStdString();
-		return result.split(*currentSet, false)[0].toStdString();
+		return result.substring(0, result.length() -1).toStdString();
 	}
 	FString curset = keystr.split(".")[0];
 	if (inSets(curset, currentSet, reservedSets, sets))

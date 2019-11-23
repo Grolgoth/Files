@@ -110,7 +110,7 @@ bool FString::endsWith(std::string suffix, bool ignoreCase)
 {
 	if (suffix.length() > base.length())
 		return false;
-	return indexOf(suffix, ignoreCase) == (int)(base.length() - suffix.length());
+	return indexOf(suffix, ignoreCase, 0, 1, false) == (int)(base.length() - 1);
 }
 
 bool FString::endsWith(FString suffix, bool ignoreCase)
