@@ -430,12 +430,14 @@ void File::replace(std::string find, std::string target, bool ignoreCase, bool a
 	{
 		if (until < 0)
 			until = allstr.length();
+		else
+			until -= fromPos;
 		if ((unsigned)until > allstr.length())
 			throw "Can't execute replace operation because the end position specified is greater than the file length.";
-		std::string first = FString(allstr).substring(0, until - fromPos)
+		std::string first = FString(allstr).substring(0, until)
 			.replace(find, target, ignoreCase, all, occurences, true)
 			.toStdString();
-		std::string second = FString(allstr).substring(until - fromPos)
+		std::string second = FString(allstr).substring(until)
 			.toStdString();
 		std::string before = getFromFile(0, fromPos);
 		allstr = before + first + second;

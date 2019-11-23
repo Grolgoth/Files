@@ -280,9 +280,17 @@ void getToRightPosInFile(std::string currentSet, std::vector<std::string>* sets,
 		file->setPos(file->getSize());
 }
 
+void getToRightPosInSet(FString keystr, File* file, long pos)
+{
+	std::string key = "";
+	if(keystr.contains("."))
+		key = keystr.split(".", false, true).back().toStdString();
+	file->setPos(file->findNext(pos, key));
+}
+
 void deleteNextLine(File* file, long pos)
 {
-	unsigned long nextEnd = file->findNext(pos, "\n");
+	unsigned long nextEnd = file->findNext(pos, "\n") + 1;
 	std::string line = file->getFromFile(pos, nextEnd);
 	file->replace(line, "", false, false, 1, pos);
 }
@@ -319,6 +327,13 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 		file.setPos(0, false);
 	}
 	write::getToRightPosInFile(currentSet, &sets, &file);
+	if (previousValue != "")
+	{
+		long pos = file.getPos();
+		file.close();
+		file.open();
+		write::getToRightPosInSet(keystr, &file, pos);
+	}
 	write::writeIt(keystr, value, &file, nested);
 	if (previousValue != "")
 	{

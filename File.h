@@ -12,7 +12,7 @@ class File {
 
 		static std::string getPathToExe();
 
-		File(std::string file, bool platformSpecific = true);
+		File(std::string file, bool platformSpecific = false);
 		~File();
 		File(const File& other);
 
