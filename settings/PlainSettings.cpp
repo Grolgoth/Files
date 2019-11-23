@@ -280,6 +280,13 @@ void getToRightPosInFile(std::string currentSet, std::vector<std::string>* sets,
 		file->setPos(file->getSize());
 }
 
+void deleteNextLine(File* file, long pos)
+{
+	unsigned long nextEnd = file->findNext(pos, "\n");
+	std::string line = file->getFromFile(pos, nextEnd);
+	file->replace(line, "", false, false, 1, pos);
+}
+
 bool checkBasis(std::string key, std::string value)
 {
 	if (key == "" || value == "")
@@ -299,7 +306,8 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 		return false;
 	FString keystr(key);
 	std::string currentSet = sets[0];
-	if(get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets) != "" && !overwriteIfExists)
+	std::string previousValue = get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets);
+	if(previousValue != "" && !overwriteIfExists)
 		return false;
 	int nested = FString(currentSet).findAll(" ", false, 0).size();
 	if (currentSet != sets[0])
@@ -312,6 +320,15 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 	}
 	write::getToRightPosInFile(currentSet, &sets, &file);
 	write::writeIt(keystr, value, &file, nested);
+	if (previousValue != "")
+	{
+		long pos = file.getPos();
+		file.close();
+		file.open();
+		write::deleteNextLine(&file, pos); //To delete oldValue if it existed
+	}
+	file.close();
+	file.open();
 	return valid();
 }
 

@@ -27,6 +27,7 @@ class File {
 		std::string getFileName();
 		std::string readline();
 		std::string getFromFile(unsigned long beginpos = 0, unsigned long endpos = 0);
+		unsigned long findNext(long from, std::string search);
 		std::vector<long> findAll(std::string find, bool ignoreCase = true, bool all = true, int occurences = 1, long fromPos = -1, long until = -1);
 		std::vector<std::string> getLines(bool fromCurrentPos);
 		std::vector<std::string> getFilesInDir();
