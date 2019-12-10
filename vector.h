@@ -85,6 +85,29 @@ class Vector
 		inline std::vector<T> toStdVector() {return base;}
 		inline T get(unsigned int index) {return base[index];}
 		inline T getBack() {return base.back();}
+		void include(Vector<T> target, bool cull = false)
+		{
+			for (unsigned int i = 0; i < target.size(); i++)
+				if (!contains(target.get(i)))
+					base.push_back(target.get(i));
+			if (cull)
+			{
+				for (unsigned int i = 0; i < size(); i++)
+				{
+					if (!target.contains(base[i]))
+					{
+						base.erase(base.begin() + i);
+						i--;
+					}
+				}
+			}
+		}
+		void exclude(Vector<T> target)
+		{
+			for (unsigned int i = 0; i < target.size(); i++)
+				if (contains(target.get(i)))
+					removeElement(target.get(i));
+		}
 
 	private:
 		std::vector<T> base;
