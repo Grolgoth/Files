@@ -201,18 +201,20 @@ bool inSets(FString setName, std::string* currentSet, std::vector<std::string>* 
 	return false;
 }
 
-std::string resolveKey(FString keystr, std::string* currentSet, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines, std::vector<std::string>* sets)
+std::string resolveKey(FString keystr, std::string* currentSet, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines, std::vector<std::string>* sets, int nested)
 {
 	if (!keystr.contains("."))
 	{
 		FString result(findLine(keystr.toStdString(), *currentSet, reservedLines));
 		if (result.toStdString() == "")
 			return result.toStdString();
-		return result.substring(0, result.length() -1).toStdString();
+		if (nested > 1)
+			result = result.replace(" ", "", false, false, nested - 1, false);
+		return result.substring(0, result.length() - nested).toStdString();
 	}
 	FString curset = keystr.split(".")[0];
 	if (inSets(curset, currentSet, reservedSets, sets))
-		return resolveKey(keystr.split(".")[1], currentSet, reservedSets, reservedLines, sets);
+		return resolveKey(keystr.split(".")[1], currentSet, reservedSets, reservedLines, sets, nested + 1);
 	return "";
 }
 
@@ -225,7 +227,7 @@ std::vector<std::string> PlainSettings::get(std::vector<std::string> keys)
 	{
 		FString keystr(key);
 		std::string currentSet = sets[0];
-		result.push_back(get::resolveKey(keystr, &currentSet, &reservedSets, &reservedLines, &sets));
+		result.push_back(get::resolveKey(keystr, &currentSet, &reservedSets, &reservedLines, &sets, 0));
 	}
 	return result;
 }
@@ -314,7 +316,7 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 		return false;
 	FString keystr(key);
 	std::string currentSet = sets[0];
-	std::string previousValue = get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets);
+	std::string previousValue = get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets, 0);
 	if(previousValue != "" && !overwriteIfExists)
 		return false;
 	int nested = FString(currentSet).findAll(" ", false, 0).size();
@@ -350,5 +352,5 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 bool PlainSettings::exists(std::string key)
 {
 	std::string currentSet = sets[0];
-	return get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets) != "";
+	return get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets, 0) != "";
 }
