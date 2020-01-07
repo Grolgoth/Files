@@ -205,6 +205,8 @@ std::string resolveKey(FString keystr, std::string* currentSet, std::vector<std:
 {
 	if (!keystr.contains("."))
 	{
+		if (nested == 0)
+			nested = 1;
 		FString result(findLine(keystr.toStdString(), *currentSet, reservedLines));
 		if (result.toStdString() == "")
 			return result.toStdString();
