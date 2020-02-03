@@ -85,6 +85,7 @@ class Vector
 		inline std::vector<T> toStdVector() {return base;}
 		inline T get(unsigned int index) {return base[index];}
 		inline T getBack() {return base.back();}
+		inline T* getptr(unsigned int index) {return &base[index];}
 		void include(Vector<T> target, bool cull = false)
 		{
 			for (unsigned int i = 0; i < target.size(); i++)

@@ -195,7 +195,7 @@ bool inSets(FString setName, std::string* currentSet, std::vector<std::string>* 
 	for (unsigned int i = 0; i < reservedSets->size(); i++)
 	{
 		FString indexstr((*reservedSets)[i]);
-		if (indexstr.endsWith(*currentSet, false) && indexstr.startsWith(setName, false))
+		if (indexstr.endsWith(*currentSet, false) && indexstr.substring(0, indexstr.length() - currentSet->length()).startsWith(setName, false))
 		{
 			*currentSet = (*sets)[i + 1];
 			return true;
