@@ -10,6 +10,7 @@ class PlainSettings : public Settings
 		~PlainSettings();
 
 	std::vector<std::string> get(std::vector<std::string> keys);
+	std::vector<std::string> getSet(std::string key);
 	bool write(std::string key, std::string value, bool overwriteIfExists = true);
 	bool exists(std::string key);
 	private:

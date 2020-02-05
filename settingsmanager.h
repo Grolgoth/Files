@@ -15,6 +15,7 @@ class Settings
 		};
 		virtual ~Settings();
 		virtual std::vector<std::string> get(std::vector<std::string> keys) = 0;
+		virtual std::vector<std::string> getSet(std::string key) = 0;
 		virtual bool write(std::string key, std::string value, bool overwriteIfExists = true) = 0;
 		virtual bool exists(std::string key) = 0;
 	protected:

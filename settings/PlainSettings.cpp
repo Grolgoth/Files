@@ -233,6 +233,39 @@ std::vector<std::string> PlainSettings::get(std::vector<std::string> keys)
 	return result;
 }
 
+std::vector<std::string> PlainSettings::getSet(std::string key)
+{
+	std::vector<std::string> result;
+	std::vector<FString> split = FString(key).split(".", true, true);
+	if (split.size() == 0)
+		split = {FString(key)};
+	std::string currentSet = sets[0];
+	for (unsigned int i = 0; i < split.size(); i++)
+	{
+		if (!get::inSets(split[i], &currentSet, &reservedSets, &sets))
+			return {};
+	}
+	for (std::string index : reservedLines)
+	{
+		FString indexstr(index);
+		if (indexstr.endsWith(FString(currentSet), false))
+		{
+			bool dont = false;
+			for (std::string set : sets)
+			{
+				if (set.length() > currentSet.length() && indexstr.endsWith(set))
+				{
+					dont = true;
+					break;
+				}
+			}
+			if (!dont)
+				result.push_back(indexstr.substring(0, index.length() - currentSet.length()).toStdString());
+		}
+	}
+	return result;
+}
+
 namespace write
 {
 
