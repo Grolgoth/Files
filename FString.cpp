@@ -274,7 +274,7 @@ FString FString::replace(std::string sfind, std::string target, bool ignoreCase,
 	for (FString index : split)
 	{
 		result += index.toStdString();
-		if (index != split.back())
+		if (index != split.back() || split.size() == 1)
 			result += target;
 	}
 	return FString(result);

@@ -88,12 +88,12 @@ class Vector
 		inline T* getptr(unsigned int index) {return &base[index];}
 		void include(Vector<T> target, bool cull = false)
 		{
-			for (unsigned int i = 0; i < target.size(); i++)
+			for (int i = 0; i < target.size(); i++)
 				if (!contains(target.get(i)))
 					base.push_back(target.get(i));
 			if (cull)
 			{
-				for (unsigned int i = 0; i < size(); i++)
+				for (int i = 0; i < size(); i++)
 				{
 					if (!target.contains(base[i]))
 					{
