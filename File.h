@@ -12,6 +12,8 @@ class File {
 
 		static std::string getPathToExe();
 
+		/** The path to the file can be relative(./ or ../../ etc). If you don't include any forward slash (/) the path will be searched from the
+		executable location. Never write the path with backslashes (\) always forward slashes even if using windows.*/
 		File(std::string file, bool platformSpecific = false);
 		~File();
 		File(const File& other);
@@ -47,12 +49,16 @@ class File {
 	protected:
 		static std::string executableName;
 		std::string mabsoluteFileName;
+		std::vector<std::string> dirSplits;
 		char dir = 'u';
 		bool mopen;
 		bool platformSpecific;
 		FILE* f = nullptr;
 
 		std::string toPlatform(std::string base);
+
+    private:
+        void getDirectoryTree();
 };
 
 #endif // FILE_H_INCLUDED

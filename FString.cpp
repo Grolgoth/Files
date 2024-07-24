@@ -337,3 +337,19 @@ std::vector<FString> FString::split(FString sfind, bool ignoreCase, bool all, in
 {
 	return split(sfind.toStdString(), ignoreCase, all, occurences, fromBegin);
 }
+
+std::vector<std::string> FString::getSplits(std::string find, bool ignoreCase, int after, bool all, int occurences, bool fromBegin)
+{
+	std::vector<std::string> result;
+	std::vector<FString> splits = split(find, ignoreCase, all, occurences, fromBegin);
+	for (FString index : splits)
+	{
+		if (after > 0)
+		{
+			after --;
+			continue;
+		}
+		result.push_back(index.toStdString());
+	}
+	return result;
+}

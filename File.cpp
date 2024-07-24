@@ -1,11 +1,12 @@
-#include "file.h"
+#include "File.h"
 #include "defines.h"
 #include "fstring.h"
 #include "encoder.h"
-#include <sys/stat.h>
 #include <algorithm>
+#include <filesystem>
 
 #ifdef OS_Windows
+#include <sys/stat.h>
 #include "windows.h"
 #include "windef.h"
 #elif defined(OS_Linux)
@@ -92,7 +93,20 @@ File::File(std::string file, bool platformSpecific) : mopen(false), platformSpec
 	}
 	else // not using relative file name
 		mabsoluteFileName = file;
+	getDirectoryTree();
 	isDir();
+}
+
+void File::getDirectoryTree()
+{
+	std::vector<FString> splits = FString(mabsoluteFileName).split("/", true, false, 1, false)[0].split("/", true, true);
+	std::string path = "";
+	for(unsigned int i = 0; i < splits.size(); i++)
+	{
+		path += splits[i].toStdString();
+		dirSplits.push_back(path);
+		path += '/';
+	}
 }
 
 File::~File()
@@ -324,6 +338,9 @@ void File::create()
 {
 	if (!exists())
 	{
+		File fileDir(dirSplits.back());
+		if (!fileDir.exists())
+			fileDir.createDir();
 		f = fopen(mabsoluteFileName.c_str(), "wb+");
 		fclose(f);
 	}
@@ -335,9 +352,15 @@ void File::createDir()
 {
 	if (!exists())
 	{
-		#ifdef OS_windows
-		CreateDirectory(getAbsolutePath(), nullptr);
-		#endif
+		for(unsigned int i = 1; i < dirSplits.size(); i++)
+		{
+			File checkFile(dirSplits[i]);
+			if(checkFile.exists())
+				continue;
+			else
+				std::filesystem::create_directory(dirSplits[i]);
+		}
+		std::filesystem::create_directory(mabsoluteFileName);
 	}
 	else
 		throw "Can't create directory because it already exists";
