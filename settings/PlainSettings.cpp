@@ -294,22 +294,14 @@ void getToRightPosInFile(std::string currentSet, std::vector<std::string>* sets,
 {
 	if (currentSet != (*sets)[0])
 	{
-		unsigned int setsInt = 0;
+		std::string line;
 		for (unsigned int i = 1; i < sets->size(); i++)
 		{
 			if ((*sets)[i] == currentSet)
-			{
-				std::string line;
-				do
-				{
-					if (setsInt == i)
-						break;
-					line = file->readline();
-					if (line[0] == '[')
-						setsInt ++;
-				} while (line != "");
 				break;
-			}
+			do {
+				line = file->readline();
+			} while (line[0] != '[');
 		}
 	}
 	else
@@ -350,7 +342,7 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 		return false;
 	FString keystr(key);
 	std::string currentSet = sets[0];
-	std::string previousValue = get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets);
+	std::string previousValue = get::resolveKey(keystr, &currentSet, &reservedSets, &reservedLines, &sets);
 	if(previousValue != "" && !overwriteIfExists)
 		return false;
 	int nested = FString(currentSet).findAll(" ", false, 0).size();

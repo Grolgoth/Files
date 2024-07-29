@@ -368,6 +368,8 @@ void File::createDir()
 
 void File::open()
 {
+	if (mopen)
+		return;
 	isDir();
 	if (dir == 'f')
 	{
@@ -492,6 +494,8 @@ Encodes the file given an algorithm
 */
 void File::encode(Algorithm algorithm)
 {
+	if (getSize() == 0)
+		return;
 	if(exists() && mopen)
 	{
 		FString file = getFromFile();
@@ -507,6 +511,8 @@ void File::encode(Algorithm algorithm)
 
 void File::decode(Algorithm encodeAlgorithm, Algorithm decodeAlgorithm)
 {
+	if (getSize() == 0)
+		return;
 	if(exists() && mopen)
 	{
 		FString file = getFromFile();
