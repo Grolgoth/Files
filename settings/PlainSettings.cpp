@@ -30,7 +30,7 @@ bool isReservedLine(std::vector<std::string>* reservedLines, std::string linekey
 	for(std::string index : *reservedLines)
 	{
 		FString indexstr(index);
-		if (indexstr.endsWith(FString(currentSet), false))
+		if (indexstr.endsWith(FString("=" + currentSet), false))
 			if (indexstr.split("=")[0].toStdString() == linekey)
 				return true;
 	}
@@ -87,7 +87,7 @@ bool resolveNormalLine(FString linestr, std::string currentSet, std::vector<std:
 		*error = "Found line with missing key or value. Make sure neither side of the equals sign (=) is empty. Line: " + FString::fromInt(pos).toStdString();
 		return false;
 	}
-	linestr = linestr + FString(currentSet);
+	linestr = linestr + FString("=" + currentSet);
 	if (isReservedLine(reservedLines, linestr.split("=")[0].toStdString(), currentSet))
 	{
 		*error = "Found line with same key as other line, within the same set. Lines with the same key are allowed but not when they are both in the same set. Line: " + FString::fromInt(pos).toStdString();
@@ -183,7 +183,7 @@ std::string findLine(std::string line, std::string currentSet, std::vector<std::
 	for (std::string index : *reservedLines)
 	{
 		FString indexstr(index);
-		if (indexstr.endsWith(FString(currentSet), false))
+		if (indexstr.split("=", false, false, 1, false)[1].toStdString() == currentSet)
 			if (indexstr.split("=")[0].toStdString() == line)
 				return indexstr.split("=")[1].toStdString();
 	}
@@ -211,7 +211,7 @@ std::string resolveKey(FString keystr, std::string* currentSet, std::vector<std:
 		FString result(findLine(keystr.toStdString(), *currentSet, reservedLines));
 		if (result.toStdString() == "")
 			return result.toStdString();
-		return result.substring(0, result.length() - currentSet->length()).toStdString();
+		return result.substring(0, result.length() - currentSet->length() - 1).toStdString(); // The minus 1 is for the extra = character that the reservedlines contain
 	}
 	FString curset = keystr.split(".")[0];
 	if (inSets(curset, currentSet, reservedSets, sets))
@@ -248,12 +248,12 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 	for (std::string index : reservedLines)
 	{
 		FString indexstr(index);
-		if (indexstr.endsWith(FString(currentSet), false))
+		if (indexstr.endsWith(FString("=" + currentSet), false))
 		{
 			bool dont = false;
 			for (std::string set : sets)
 			{
-				if (set.length() > currentSet.length() && indexstr.endsWith(set))
+				if (set.length() > currentSet.length() && indexstr.endsWith("=" + set))
 				{
 					dont = true;
 					break;
@@ -295,7 +295,7 @@ void getToRightPosInFile(std::string currentSet, std::vector<std::string>* sets,
 	if (currentSet != (*sets)[0])
 	{
 		std::string line;
-		for (unsigned int i = 1; i < sets->size(); i++)
+		for (unsigned int i = 0; i < sets->size(); i++)
 		{
 			if ((*sets)[i] == currentSet)
 				break;
@@ -304,8 +304,22 @@ void getToRightPosInFile(std::string currentSet, std::vector<std::string>* sets,
 			} while (line[0] != '[');
 		}
 	}
-	else
+	if (file->atEOF())
+	{
+		if (file->getSize() < 2)
+			return;
+		int newlineCount = 2;
+		std::string str = file->getFromFile(file->getSize() - 2, 0);
 		file->setPos(file->getSize());
+		if (str[1] == '\n')
+		{
+			newlineCount --;
+			if (str[0] == '\n')
+				newlineCount --;
+		}
+		for (int i = newlineCount; i > 0; i --)
+			file->write("\n");
+	}
 }
 
 void getToRightPosInSet(FString keystr, File* file, long pos)
@@ -313,7 +327,17 @@ void getToRightPosInSet(FString keystr, File* file, long pos)
 	std::string key = "";
 	if(keystr.contains("."))
 		key = keystr.split(".", false, true).back().toStdString();
-	file->setPos(file->findNext(pos, key));
+	else
+		key = keystr.toStdString();
+	long subspos = file->findNext(pos, "[");
+	long findpos = file->findNext(pos, key);
+	while(subspos != -1 && subspos < findpos)
+	{
+		pos = file->findNext(subspos, "~");
+		subspos = file->findNext(pos, "[");
+		findpos = file->findNext(pos, key);
+	}
+	file->setPos(findpos);
 }
 
 void deleteNextLine(File* file, long pos)
@@ -332,6 +356,13 @@ bool checkBasis(std::string key, std::string value)
 	if (keystr.startsWith(".") || keystr.endsWith(".") || keystr.contains("=") || valuestr.contains(".") || valuestr.contains("="))
 		return false;
 	return true;
+}
+
+void resetSets(std::vector<std::string>* sets, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines)
+{
+	sets->clear();
+	reservedSets->clear();
+	reservedLines->clear();
 }
 
 }
@@ -372,6 +403,7 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 	}
 	file.close();
 	file.open();
+	write::resetSets(&sets, &reservedSets, &reservedLines);
 	return valid();
 }
 

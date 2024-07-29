@@ -241,7 +241,10 @@ unsigned long File::findNext(long from, std::string search)
 {
 	std::string leftover = getFromFile(from);
 	FString fstr(leftover);
-	return fstr.indexOf(search) + from;
+	int index = fstr.indexOf(search);
+	if (index == -1)
+		return -1;
+	return index + from;
 }
 
 std::string File::toPlatform(std::string base)
