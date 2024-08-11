@@ -245,22 +245,52 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 		if (!get::inSets(split[i], &currentSet, &reservedSets, &sets))
 			return {};
 	}
+
+	std::string masterSet = currentSet;
+	std::string thisSet = currentSet;
+	std::vector<std::string> subset;
+	bool inSubset = false;
+
 	for (std::string index : reservedLines)
 	{
 		FString indexstr(index);
-		if (indexstr.endsWith(FString("=" + currentSet), false))
+		if (indexstr.contains(FString("=" + currentSet), false))
 		{
-			bool dont = false;
-			for (std::string set : sets)
+			if (indexstr.split("=", false, false, 1, false)[1].length() > currentSet.length())
 			{
-				if (set.length() > currentSet.length() && indexstr.endsWith("=" + set))
+				if (!inSubset || thisSet != indexstr.split("=", false, false, 1, false)[1].toStdString())
 				{
-					dont = true;
-					break;
+					inSubset = true;
+					thisSet = indexstr.split("=", false, false, 1, false)[1].toStdString();
+					int othersets = FString(thisSet.substr(thisSet.size() - 1)).toInt() - 1;
+					int otherSetCounter = 0;
+					std::string thisSetName;
+					for (std::string str : reservedSets)
+					{
+						if (FString(str).endsWith(masterSet))
+						{
+							if (otherSetCounter == othersets)
+							{
+								thisSetName = FString(str).substring(0, str.length() - currentSet.length()).toStdString(); //No -1 after masterSet.length() bc reservedSets doesn't work with the = to separate set from name
+								break;
+							}
+							else
+								otherSetCounter ++;
+						}
+					}
+					subset = getSet(key + "." + thisSetName);
+					result.push_back(thisSetName + "{");
+					for (std::string str : subset)
+						result.push_back(str);
+					result.push_back("}");
+					subset.clear();
+					currentSet = masterSet;
 				}
 			}
-			if (!dont)
-				result.push_back(indexstr.substring(0, index.length() - currentSet.length()).toStdString());
+			else
+				inSubset = false;
+			if (!inSubset)
+				result.push_back(indexstr.substring(0, index.length() - currentSet.length() - 1).toStdString());
 		}
 	}
 	return result;
