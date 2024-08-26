@@ -18,7 +18,10 @@ std::string File::executableName;
 std::string File::getPathToExe()
 {
 	if(!executableName.empty())
-		return FString(executableName).split("/", true, false, 1, false)[0].toStdString();
+	{
+		size_t pos = executableName.rfind('/');
+		return executableName.substr(0, pos);
+	}
 	std::string result = "UNDEFINED";
 	#ifdef OS_Windows
 		#ifdef UNICODE
@@ -77,19 +80,20 @@ newline characters to \r\n for windows systems when performing write operations.
 */
 File::File(std::string file, bool platformSpecific) : mopen(false), platformSpecific(platformSpecific)
 {
-	if (FString(file).startsWith("./") || FString(file).startsWith("../") || !FString(file).contains("/"))
+	FString ffile(file);
+	if (ffile.startsWith("./") || ffile.startsWith("../") || !ffile.contains("/"))
 	{
 		mabsoluteFileName = getPathToExe();
-		while(FString(file).startsWith("../"))
+		while(ffile.startsWith("../"))
 		{
-			std::vector<FString> split = FString(mabsoluteFileName).split("/", true, false, 1, false);
-			if (!split.empty())
-				mabsoluteFileName = split[0].toStdString();
-			file = FString(file).substring(3, file.length()).toStdString();
+			size_t pos = mabsoluteFileName.rfind('/');
+			if (pos != std::string::npos)
+				mabsoluteFileName = mabsoluteFileName.substr(0, pos);
+			ffile = ffile.substring(3, ffile.length());
 		}
-		if (FString(file).startsWith("./"))
-			file = FString(file).replace("./", "", true, false).toStdString();
-		mabsoluteFileName += "/" + file;
+		if (ffile.startsWith("./"))
+			ffile = ffile.replace("./", "", true, false);
+		mabsoluteFileName += "/" + ffile.toStdString();
 	}
 	else // not using relative file name
 		mabsoluteFileName = file;
