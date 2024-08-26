@@ -1,7 +1,7 @@
 #include "settingsmanager.h"
 #include "settings/plainsettings.h"
 
-Settings* SettingsManager::getSettings(std::string fileName, bool isEncoded, Settings::type settingsType, Encoder* encoder)
+SettingsManager::SettingsManager(std::string fileName, bool isEncoded, SettingsManager::type settingsType, Encoder* encoder)
 {
 	try
 	{
@@ -12,15 +12,21 @@ Settings* SettingsManager::getSettings(std::string fileName, bool isEncoded, Set
 			throw "Error initiating Settings object: cannot create encoded Settings without an valid Encoder pointer";
 		switch(settingsType)
 		{
-			case Settings::PLAIN:
-				return new PlainSettings(file, isEncoded, encoder);
+			case SettingsManager::PLAIN:
+				settings = new PlainSettings(file, isEncoded, encoder);
 			default:
-				return new PlainSettings(file, isEncoded, encoder);
+				settings = new PlainSettings(file, isEncoded, encoder);
 		}
 	} catch (std::string error)
 	{
 		throw error;
 	}
+}
+
+SettingsManager::~SettingsManager()
+{
+	if (settings != nullptr)
+		delete settings;
 }
 
 Settings::Settings(File file, bool isEncoded, Encoder* encoder) : file(file), encoded(isEncoded), encoder(encoder)

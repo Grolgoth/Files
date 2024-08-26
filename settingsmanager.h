@@ -8,11 +8,6 @@ class Settings
 {
 	friend class SettingsManager;
 	public:
-		enum type {
-			XML = 1,
-			JSON,
-			PLAIN = 0
-		};
 		virtual ~Settings();
 		virtual std::vector<std::string> get(std::vector<std::string> keys) = 0;
 		virtual std::vector<std::string> getSet(std::string key) = 0;
@@ -29,9 +24,19 @@ class Settings
 class SettingsManager
 {
 	public:
-		static Settings* getSettings(std::string fileName, bool isEncoded, Settings::type settingsType, Encoder* encoder);
+		enum type {
+			XML = 1,
+			JSON,
+			PLAIN = 0
+		};
+		SettingsManager(std::string fileName, bool isEncoded, SettingsManager::type settingsType, Encoder* encoder);
+		~SettingsManager();
+		std::vector<std::string> get(std::vector<std::string> keys) {return settings->get(keys);}
+		std::vector<std::string> getSet(std::string key) {return settings->getSet(key);}
+		bool write(std::string key, std::string value, bool overwriteIfExists = true) {return settings->write(key, value, overwriteIfExists);}
+		bool exists(std::string key) {return settings->exists(key);}
 	private:
-		SettingsManager(){}
+		Settings* settings = nullptr;
 };
 
 #endif // SETTINGSMANAGER_H

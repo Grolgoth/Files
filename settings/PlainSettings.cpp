@@ -14,7 +14,7 @@ PlainSettings::PlainSettings(File file, bool isEncoded, Encoder* encoder) : Sett
 
 PlainSettings::~PlainSettings()
 {
-
+	//file is closed in parent destructor. Encoder is deleted there as well
 }
 
 namespace validate
