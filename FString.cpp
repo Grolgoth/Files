@@ -226,7 +226,7 @@ FString FString::substring(unsigned int ibegin, int iend)
 		uiend = (unsigned)iend;
 	if (ibegin >= base.length() || uiend <= ibegin || uiend > base.length())
 		return FString("");
-	FString resultToCopy(base.substr(ibegin, iend));
+	FString resultToCopy(base.substr(ibegin, uiend - ibegin));
 	return resultToCopy;
 }
 

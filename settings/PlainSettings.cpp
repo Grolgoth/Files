@@ -265,9 +265,7 @@ std::string resolveKey(std::string keystr, std::string* currentSet, std::vector<
 	if (pos == std::string::npos)
 	{
 		std::string result = findLine(keystr, *currentSet, reservedLines);
-		//if (result == "")
-			return result;
-		//return result.substr(0, result.length() - currentSet->length() - 1); // The minus 1 is for the extra = character that the reservedlines contain
+		return result;
 	}
 	std::string curset = keystr.substr(0, pos);
 	if (inSets(curset, currentSet, reservedSets, sets))
@@ -479,6 +477,9 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 		if (split.size() > 0)
 			key = split.back();
 		long pos = file.getPos();
+		if (pos > 0)
+			pos--; //put the pos back 1 char because we are looking for \n + key, not just key. (This is because otherwise we might find the key in a value part
+				//of another key instead of at the beginning of a newline where it should be)
 		file.close();
 		file.open();
 		write::getToRightPosInSet(key, &file, pos);
