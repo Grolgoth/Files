@@ -14,6 +14,7 @@ SettingsManager::SettingsManager(std::string fileName, bool isEncoded, SettingsM
 		{
 			case SettingsManager::PLAIN:
 				settings = new PlainSettings(file, isEncoded, encoder);
+				break;
 			default:
 				settings = new PlainSettings(file, isEncoded, encoder);
 		}

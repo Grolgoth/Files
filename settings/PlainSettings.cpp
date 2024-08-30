@@ -1,7 +1,6 @@
 #include "plainsettings.h"
 #include "../defines.h"
 #include <algorithm>
-#include "../fstring.h"
 
 PlainSettings::PlainSettings(File file, bool isEncoded, Encoder* encoder) : Settings(file, isEncoded, encoder)
 {
@@ -10,11 +9,62 @@ PlainSettings::PlainSettings(File file, bool isEncoded, Encoder* encoder) : Sett
 		std::cout << error << std::endl;
 		throw std::string("Error creating PlainSettings file: " + error);
 	}
+
+	/* for if you want to know what's going on:
+	std::cout << "RSL:" << std::endl;
+	for (std::string str : reservedLines)
+		std::cout << str << std::endl;
+	std::cout << "\n\nRS:" << std::endl;
+	for (std::string str : reservedSets)
+		std::cout << str << std::endl;
+	std::cout << "\n\nS:" << std::endl;
+	for (std::string str : sets)
+		std::cout << str << std::endl;
+	*/
+
 }
 
 PlainSettings::~PlainSettings()
 {
 	//file is closed in parent destructor. Encoder is deleted there as well
+}
+
+namespace local
+{
+	std::vector<std::string> split(const std::string& delimiter, const std::string& base)
+	{
+		std::vector<std::string> result;
+		size_t start = 0;
+		size_t end = base.find(delimiter);
+		if (end == std::string::npos)
+			return result;
+
+		while (end != std::string::npos)
+		{
+			result.push_back(base.substr(start, end - start));
+			start = end + delimiter.length();
+			end = base.find(delimiter, start);
+		}
+		result.push_back(base.substr(start));
+
+		return result;
+	}
+
+	bool endsWith(const std::string& str, const std::string& suffix)
+	{
+		if (str.length() >= suffix.length())
+			return str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0;
+		else
+			return false;
+	}
+
+	bool startsWith(const std::string& str, const std::string& prefix)
+	{
+		if (str.length() >= prefix.length())
+			return str.compare(0, prefix.length(), prefix) == 0;
+		else
+			return false;
+	}
 }
 
 namespace validate
@@ -27,12 +77,15 @@ bool inVector(std::vector<std::string>* v, std::string x)
 
 bool isReservedLine(std::vector<std::string>* reservedLines, std::string linekey, std::string currentSet)
 {
-	for(std::string index : *reservedLines)
+	for(const std::string& index : *reservedLines)
 	{
-		FString indexstr(index);
-		if (indexstr.endsWith(FString("=" + currentSet), false))
-			if (indexstr.split("=")[0].toStdString() == linekey)
+		size_t pos = index.find("=");
+		if (pos != std::string::npos && index.substr(pos + 1, index.length()) == currentSet)
+		{
+			std::string indexstr = index.substr(0, pos);
+			if (indexstr == linekey)
 				return true;
+		}
 	}
 	return false;
 }
@@ -41,28 +94,28 @@ int getSetIndex(std::string target)
 {
 	if (target[0] == '0')
 		return 0;
-	FString setstr(target);
-	if (setstr.contains(" "))
+	size_t pos = target.rfind(" ");
+	if (pos != std::string::npos)
 	{
-		setstr = setstr.split(" ", true, false, 1, false)[1];
+		target = target.substr(pos + 1, target.length());
 	}
-	return setstr.toInt();
+	return atoi(target.c_str());
 }
 
-std::string nextInSets(std::string currentSet, std::string nextSet)
+std::string nextInSets(const std::string& currentSet, std::string nextSet)
 {
 	int start = getSetIndex(nextSet);
 	if (currentSet == "0")
-		return FString::fromInt(start + 1).toStdString();
-	return currentSet + " " + FString::fromInt(start + 1).toStdString();
+		return std::to_string(start + 1);
+	return currentSet + " " + std::to_string(start + 1);
 
 }
 
 std::string previousSet(std::string current)
 {
-	FString currentSetstr(current);
-	if (currentSetstr.contains(" "))
-		return currentSetstr.split(" ", true, false, 1, false)[0].toStdString();
+	size_t pos = current.rfind(" ");
+	if (pos != std::string::npos)
+		return current.substr(0, pos);
 	return "0";
 }
 
@@ -75,63 +128,65 @@ void nextSet(std::vector<std::string>* sets, std::string* currentSet)
 	sets->push_back(*currentSet);
 }
 
-bool resolveNormalLine(FString linestr, std::string currentSet, std::vector<std::string>* reservedLines, int pos, std::string* error)
+bool resolveNormalLine(std::string linestr, std::string currentSet, std::vector<std::string>* reservedLines, int pos, std::string* error)
 {
-	if (linestr.split("=").size() < 1 || linestr.split("=").size() > 2)
+	std::vector<std::string> split = local::split("=", linestr);
+	if (split.size() < 1 || split.size() > 2)
 	{
-		*error = "Found line with less or more than one equals (=) character. For this format we use a 'key=value' based format. Line: " + FString::fromInt(pos).toStdString();
+		*error = "Found line with less or more than one equals (=) character. For this format we use a 'key=value' based format. Line: " + std::to_string(pos);
 		return false;
 	}
-	if (linestr.split("=").size() == 1)
+	if (split.size() == 1)
 	{
-		*error = "Found line with missing key or value. Make sure neither side of the equals sign (=) is empty. Line: " + FString::fromInt(pos).toStdString();
+		*error = "Found line with missing key or value. Make sure neither side of the equals sign (=) is empty. Line: " + std::to_string(pos);
 		return false;
 	}
-	linestr = linestr + FString("=" + currentSet);
-	if (isReservedLine(reservedLines, linestr.split("=")[0].toStdString(), currentSet))
+	linestr = linestr + "=" + currentSet;
+	if (isReservedLine(reservedLines, split[0], currentSet))
 	{
-		*error = "Found line with same key as other line, within the same set. Lines with the same key are allowed but not when they are both in the same set. Line: " + FString::fromInt(pos).toStdString();
+		*error = "Found line with same key as other line, within the same set. Lines with the same key are allowed but not when they are both in the same set. Line: " + std::to_string(pos);
 		return false;
 	}
-	reservedLines->push_back(linestr.toStdString());
+	reservedLines->push_back(linestr);
 	return true;
 }
 
-bool closeSet(FString linestr, std::string* currentSet, int pos, std::string* error)
+bool closeSet(std::string linestr, std::string* currentSet, int pos, std::string* error)
 {
-	FString currentSetstr(*currentSet);
-	if (!currentSetstr.contains(" ") && linestr.toStdString() == "~")
+	std::string currentSetstr = *currentSet;
+	size_t index = currentSetstr.find(" ");
+	if (index == std::string::npos && linestr == "~")
 	{
 		if (*currentSet == "0")
-			*error = "Found ~ character, which is used for closing subsets, while no subsets or even global sets were opened. Line: " + FString::fromInt(pos).toStdString();
+			*error = "Found ~ character, which is used for closing subsets, while no subsets or even global sets were opened. Line: " + std::to_string(pos);
 		else
-			*error = "Found ~ character, which is used for closing subsets, while no subsets were opened. Line: " + FString::fromInt(pos).toStdString();
+			*error = "Found ~ character, which is used for closing subsets, while no subsets were opened. Line: " + std::to_string(pos);
 		return false;
 	}
-	if (currentSetstr.contains(" ") && linestr.toStdString() == "")
+	if (index != std::string::npos && linestr == "")
 	{
-		*error = "Found empty line, while no global set was previously declared. An empty line can only be used to declare the end of a global set (a set that's not part of another set). Line: " + FString::fromInt(pos).toStdString();
+		*error = "Found empty line, while no global set was previously declared. An empty line can only be used to declare the end of a global set (a set that's not part of another set). Line: " + std::to_string(pos);
 		return false;
 	}
-	*currentSet = previousSet(currentSetstr.toStdString());
+	*currentSet = previousSet(currentSetstr);
 	return true;
 }
 
-bool openSet(FString linestr, std::string* currentSet, std::vector<std::string>* sets, std::vector<std::string>* reservedSets, int pos, std::string* error)
+bool openSet(std::string linestr, std::string* currentSet, std::vector<std::string>* sets, std::vector<std::string>* reservedSets, int pos, std::string* error)
 {
 	nextSet(sets, currentSet);
-	if (!linestr.endsWith("]"))
+	if (!linestr.back() == ']')
 	{
-		*error = "Found opening bracket ([) to declare subset without corresponding closing bracket (]) at the end of the line. Line: " + FString::fromInt(pos).toStdString();
+		*error = "Found opening bracket ([) to declare subset without corresponding closing bracket (]) at the end of the line. Line: " + std::to_string(pos);
 		return false;
 	}
-	std::string reservedstr = linestr.substring(1, linestr.toStdString().length() - 1).toStdString() + previousSet(*currentSet);
+	std::string reservedstr = linestr.substr(1, linestr.length() - 2) + "=" + previousSet(*currentSet);
 	if (reservedstr == previousSet(*currentSet) || inVector(reservedSets, reservedstr))
 	{
 		if (reservedstr != previousSet(*currentSet))
-			*error = "Set was opened but there was already another set declared within the same set scope. Set-name: " + reservedstr + ". Line: " + FString::fromInt(pos).toStdString();
+			*error = "Set was opened but there was already another set declared within the same set scope. Set-name: " + reservedstr + ". Line: " + std::to_string(pos);
 		else
-			*error = "Cannot declare a set with an empty name (\"\"). Line: " + FString::fromInt(pos).toStdString();
+			*error = "Cannot declare a set with an empty name (\"\"). Line: " + std::to_string(pos);
 		return false;
 	}
 	reservedSets->push_back(reservedstr);
@@ -140,21 +195,20 @@ bool openSet(FString linestr, std::string* currentSet, std::vector<std::string>*
 
 bool resolveLine(std::string line, std::string* currentSet, std::vector<std::string>* sets, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines, int pos, std::string* error)
 {
-	FString linestr(line);
 	#ifdef OS_Windows
-		if (linestr.endsWith("\r"))
-			linestr = linestr.substring(0, linestr.toStdString().length() - 1);
+		if (line.back() == ('\r'))
+			line = line.substr(0, line.length() - 1);
 	#endif // OS_Windows
-	if (linestr.contains("."))
+	if (line.find(".") != std::string::npos)
 	{
-		*error = "Found dot character (.). This character is reserved for this format and should not be used. Line: " + FString::fromInt(pos).toStdString();
+		*error = "Found dot character (.). This character is reserved for this format and should not be used. Line: " + std::to_string(pos);
 		return false;
 	}
-	if (linestr.startsWith("["))
-		return openSet(linestr, currentSet, sets, reservedSets, pos, error);
-	if (linestr.toStdString() == "~" || linestr.toStdString() == "")
-		return closeSet(linestr, currentSet, pos, error);
-	return resolveNormalLine(linestr, *currentSet, reservedLines, pos, error);
+	if (line[0] == '[')
+		return openSet(line, currentSet, sets, reservedSets, pos, error);
+	if (line == "~" || line == "")
+		return closeSet(line, currentSet, pos, error);
+	return resolveNormalLine(line, *currentSet, reservedLines, pos, error);
 }
 
 } // validate
@@ -182,20 +236,21 @@ std::string findLine(std::string line, std::string currentSet, std::vector<std::
 {
 	for (std::string index : *reservedLines)
 	{
-		FString indexstr(index);
-		if (indexstr.split("=", false, false, 1, false)[1].toStdString() == currentSet)
-			if (indexstr.split("=")[0].toStdString() == line)
-				return indexstr.split("=")[1].toStdString();
+		size_t posLast  = index.rfind("=");
+		size_t posFirst = index.find("=");
+		if (posLast != std::string::npos && index.substr(posLast + 1) == currentSet)
+			if (index.substr(0, posFirst) == line)
+				return index.substr(posFirst + 1, posLast - posFirst - 1);
 	}
 	return "";
 }
 
-bool inSets(FString setName, std::string* currentSet, std::vector<std::string>* reservedSets, std::vector<std::string>* sets)
+bool inSets(std::string setName, std::string* currentSet, std::vector<std::string>* reservedSets, std::vector<std::string>* sets)
 {
 	for (unsigned int i = 0; i < reservedSets->size(); i++)
 	{
-		FString indexstr((*reservedSets)[i]);
-		if (indexstr.endsWith(*currentSet, false) && indexstr.substring(0, indexstr.length() - currentSet->length()).startsWith(setName, false))
+		std::string indexstr = (*reservedSets)[i];
+		if ( local::endsWith(indexstr, *currentSet) && local::startsWith(indexstr.substr(0, indexstr.length() - currentSet->length()), setName) )
 		{
 			*currentSet = (*sets)[i + 1];
 			return true;
@@ -204,31 +259,31 @@ bool inSets(FString setName, std::string* currentSet, std::vector<std::string>* 
 	return false;
 }
 
-std::string resolveKey(FString keystr, std::string* currentSet, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines, std::vector<std::string>* sets)
+std::string resolveKey(std::string keystr, std::string* currentSet, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines, std::vector<std::string>* sets)
 {
-	if (!keystr.contains("."))
+	size_t pos = keystr.find(".");
+	if (pos == std::string::npos)
 	{
-		FString result(findLine(keystr.toStdString(), *currentSet, reservedLines));
-		if (result.toStdString() == "")
-			return result.toStdString();
-		return result.substring(0, result.length() - currentSet->length() - 1).toStdString(); // The minus 1 is for the extra = character that the reservedlines contain
+		std::string result = findLine(keystr, *currentSet, reservedLines);
+		//if (result == "")
+			return result;
+		//return result.substr(0, result.length() - currentSet->length() - 1); // The minus 1 is for the extra = character that the reservedlines contain
 	}
-	FString curset = keystr.split(".")[0];
+	std::string curset = keystr.substr(0, pos);
 	if (inSets(curset, currentSet, reservedSets, sets))
-		return resolveKey(keystr.split(".")[1], currentSet, reservedSets, reservedLines, sets);
+		return resolveKey(keystr.substr(pos + 1), currentSet, reservedSets, reservedLines, sets);
 	return "";
 }
 
-}
+} //get
 
 std::vector<std::string> PlainSettings::get(std::vector<std::string> keys)
 {
 	std::vector<std::string> result;
 	for (std::string key : keys)
 	{
-		FString keystr(key);
 		std::string currentSet = sets[0];
-		result.push_back(get::resolveKey(keystr, &currentSet, &reservedSets, &reservedLines, &sets));
+		result.push_back(get::resolveKey(key, &currentSet, &reservedSets, &reservedLines, &sets));
 	}
 	return result;
 }
@@ -236,9 +291,9 @@ std::vector<std::string> PlainSettings::get(std::vector<std::string> keys)
 std::vector<std::string> PlainSettings::getSet(std::string key)
 {
 	std::vector<std::string> result;
-	std::vector<FString> split = FString(key).split(".", true, true);
+	std::vector<std::string> split = local::split(".", key);
 	if (split.size() == 0)
-		split = {FString(key)};
+		split.push_back(key);
 	std::string currentSet = sets[0];
 	for (unsigned int i = 0; i < split.size(); i++)
 	{
@@ -246,51 +301,46 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 			return {};
 	}
 
-	std::string masterSet = currentSet;
-	std::string thisSet = currentSet;
-	std::vector<std::string> subset;
-	bool inSubset = false;
-
-	for (std::string index : reservedLines)
+	int subset = 0;
+	for (int i = 0; i < reservedLines.size(); i++)
 	{
-		FString indexstr(index);
-		if (indexstr.contains(FString("=" + currentSet), false))
+		std::string index = reservedLines[i];
+		size_t pos = index.find("=" + currentSet);
+		size_t posFirst = index.find("=");
+		if (pos == posFirst)
 		{
-			if (indexstr.split("=", false, false, 1, false)[1].length() > currentSet.length())
-			{
-				if (!inSubset || thisSet != indexstr.split("=", false, false, 1, false)[1].toStdString())
-				{
-					inSubset = true;
-					thisSet = indexstr.split("=", false, false, 1, false)[1].toStdString();
-					int othersets = FString(thisSet.substr(thisSet.size() - 1)).toInt() - 1;
-					int otherSetCounter = 0;
-					std::string thisSetName;
-					for (std::string str : reservedSets)
-					{
-						if (FString(str).endsWith(masterSet))
-						{
-							if (otherSetCounter == othersets)
-							{
-								thisSetName = FString(str).substring(0, str.length() - currentSet.length()).toStdString(); //No -1 after masterSet.length() bc reservedSets doesn't work with the = to separate set from name
-								break;
-							}
-							else
-								otherSetCounter ++;
-						}
-					}
-					subset = getSet(key + "." + thisSetName);
-					result.push_back(thisSetName + "{");
-					for (std::string str : subset)
-						result.push_back(str);
-					result.push_back("}");
-					subset.clear();
-					currentSet = masterSet;
-				}
-			}
+			size_t posCorrected = index.substr(posFirst + 1).find("=" + currentSet);
+			if (posCorrected != std::string::npos)
+				pos = posFirst + 1 + posCorrected;
 			else
-				inSubset = false;
-			if (!inSubset)
-				result.push_back(indexstr.substring(0, index.length() - currentSet.length() - 1).toStdString());
+				continue;
+		}
+		if (pos != std::string::npos)
+		{
+			if (index.substr(pos + 1).length() > currentSet.length()) //Opening subset
+			{
+				subset++;
+				std::string thisSetName;
+				int numInPreviousSet = std::stoi(index.substr(index.rfind(" ") + 1));
+				for (std::string str : reservedSets)
+				{
+					if (local::endsWith(str, "=" + currentSet))
+					{
+						if (--numInPreviousSet == 0)
+							thisSetName = str.substr(0, str.find("="));
+					}
+				}
+				currentSet = index.substr(pos + 1);
+				result.push_back(thisSetName + "{");
+			}
+			result.push_back(index.substr(0, index.length() - currentSet.length() - 1));
+		}
+		else if (subset > 0) //closing subset
+		{
+			result.push_back("}");
+			currentSet = currentSet.substr(0, currentSet.length() - 2);
+			subset--;
+			i--;
 		}
 	}
 	return result;
@@ -299,18 +349,23 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 namespace write
 {
 
-void writeIt(FString key, std::string value, File* file, int nested)
+void writeIt(std::string key, std::string value, File* file, int nested)
 {
-	for(int i = 0; i < nested; i ++)
-		key = key.split(".")[1];
-	int closes = 0;
-	while (key.contains("."))
+	size_t pos = key.find(".");
+	for(int i = 0; i < nested && pos != std::string::npos; i ++)
 	{
-		file->write("[" + key.split(".")[0].toStdString() + "]\n");
-		key = key.split(".")[1];
+		key = key.substr(pos + 1);
+		pos = key.find(".");
+	}
+	int closes = 0;
+	while (pos != std::string::npos)
+	{
+		file->write("[" + key.substr(0, pos) + "]\n");
+		key = key.substr(pos + 1);
+		pos = key.find(".");
 		closes ++;
 	}
-	file->write(key.toStdString() + "=" + value + "\n");
+	file->write(key + "=" + value + "\n");
 	for (int i = 0; i < closes; i ++)
 	{
 		if (i == closes -1 && nested == 0)
@@ -352,22 +407,23 @@ void getToRightPosInFile(std::string currentSet, std::vector<std::string>* sets,
 	}
 }
 
-void getToRightPosInSet(FString keystr, File* file, long pos)
+void getToRightPosInSet(std::string keystr, File* file, long pos)
 {
 	std::string key = "";
-	if(keystr.contains("."))
-		key = keystr.split(".", false, true).back().toStdString();
+	size_t index = keystr.find(".");
+	if(index != std::string::npos)
+		key = keystr.substr(index + 1);
 	else
-		key = keystr.toStdString();
+		key = keystr;
 	long subspos = file->findNext(pos, "[");
-	long findpos = file->findNext(pos, key);
+	long findpos = file->findNext(pos, "\n" + key);
 	while(subspos != -1 && subspos < findpos)
 	{
 		pos = file->findNext(subspos, "~");
 		subspos = file->findNext(pos, "[");
 		findpos = file->findNext(pos, key);
 	}
-	file->setPos(findpos);
+	file->setPos(findpos + 1);
 }
 
 void deleteNextLine(File* file, long pos)
@@ -381,9 +437,7 @@ bool checkBasis(std::string key, std::string value)
 {
 	if (key == "" || value == "")
 		return false;
-	FString keystr(key);
-	FString valuestr(value);
-	if (keystr.startsWith(".") || keystr.endsWith(".") || keystr.contains("=") || valuestr.contains(".") || valuestr.contains("="))
+	if (key[0] == '.' || key.back() == '.' || key.find("=") != std::string::npos || value.find(".") != std::string::npos || value.find("=") != std::string::npos)
 		return false;
 	return true;
 }
@@ -395,20 +449,23 @@ void resetSets(std::vector<std::string>* sets, std::vector<std::string>* reserve
 	reservedLines->clear();
 }
 
-}
+} //write
 
 bool PlainSettings::write(std::string key, std::string value, bool overwriteIfExists)
 {
 	if (!write::checkBasis(key, value))
 		return false;
-	FString keystr(key);
 	std::string currentSet = sets[0];
-	std::string previousValue = get::resolveKey(keystr, &currentSet, &reservedSets, &reservedLines, &sets);
+	std::string previousValue = get::resolveKey(key, &currentSet, &reservedSets, &reservedLines, &sets);
 	if(previousValue != "" && !overwriteIfExists)
 		return false;
-	int nested = FString(currentSet).findAll(" ", false, 0).size();
+	int nested = local::split(" ", currentSet).size() - 1;
+	if (nested < 0)
+		nested = 0;
 	if (currentSet != sets[0])
 		nested ++;
+	if (previousValue != "")
+		nested = 0;
 	file.open();
 	if (encoded)
 	{
@@ -418,12 +475,15 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 	write::getToRightPosInFile(currentSet, &sets, &file);
 	if (previousValue != "")
 	{
+		std::vector<std::string> split = local::split(".", key);
+		if (split.size() > 0)
+			key = split.back();
 		long pos = file.getPos();
 		file.close();
 		file.open();
-		write::getToRightPosInSet(keystr, &file, pos);
+		write::getToRightPosInSet(key, &file, pos);
 	}
-	write::writeIt(keystr, value, &file, nested);
+	write::writeIt(key, value, &file, nested);
 	if (previousValue != "")
 	{
 		long pos = file.getPos();
@@ -440,5 +500,7 @@ bool PlainSettings::write(std::string key, std::string value, bool overwriteIfEx
 bool PlainSettings::exists(std::string key)
 {
 	std::string currentSet = sets[0];
-	return get::resolveKey(FString(key), &currentSet, &reservedSets, &reservedLines, &sets) != "";
+	bool result = get::resolveKey(key, &currentSet, &reservedSets, &reservedLines, &sets) != "";
+	currentSet = sets[0];
+	return result;
 }

@@ -21,6 +21,8 @@ FString FString::fromVector(std::vector<FString> vect, std::string appendElement
 
 FString FString::fromInt(int target)
 {
+	return FString(std::to_string(target));
+	/* Just going to leave this in here 'cause it's so painful. Yes, this is good coding :D
 	std::string result = "";
 	if (target < 0)
 	{
@@ -48,7 +50,7 @@ FString FString::fromInt(int target)
 	}
 	for (int i = 0; i < originalDigits; i ++)
 		result += buffer[i];
-	return FString(result);
+	return FString(result); */
 }
 
 FString::FString(std::string base)
@@ -186,7 +188,7 @@ int FString::toInt()
 {
     try
     {
-		return atoi(base.c_str());
+		return std::stoi(base);
     }
     catch(...)
     {
@@ -222,12 +224,9 @@ FString FString::substring(unsigned int ibegin, int iend)
 	unsigned int uiend = base.length();
 	if (iend >= 0)
 		uiend = (unsigned)iend;
-	std::string result = "";
 	if (ibegin >= base.length() || uiend <= ibegin || uiend > base.length())
-		return result;
-	for (unsigned int i = ibegin; i < uiend; i++)
-		result += base[i];
-	FString resultToCopy(result);
+		return FString("");
+	FString resultToCopy(base.substr(ibegin, iend));
 	return resultToCopy;
 }
 

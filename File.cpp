@@ -244,9 +244,8 @@ std::string File::getFromFile(unsigned long beginpos, unsigned long endpos)
 unsigned long File::findNext(long from, std::string search)
 {
 	std::string leftover = getFromFile(from);
-	FString fstr(leftover);
-	int index = fstr.indexOf(search);
-	if (index == -1)
+	size_t index = leftover.find(search);
+	if (index == std::string::npos)
 		return -1;
 	return index + from;
 }
