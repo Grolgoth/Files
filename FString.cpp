@@ -98,9 +98,12 @@ bool FString::containsRegex(std::string sregex)
 	return std::regex_match(base, std::regex(sregex));
 }
 
-bool FString::startsWith(std::string prefix, bool ignoreCase)
+bool FString::startsWith(const std::string prefix, bool ignoreCase)
 {
-	return indexOf(prefix, ignoreCase) == 0;
+	if (base.length() >= prefix.length())
+		return base.compare(0, prefix.length(), prefix) == 0;
+	else
+		return false;
 }
 
 bool FString::startsWith(FString prefix, bool ignoreCase)
@@ -108,11 +111,12 @@ bool FString::startsWith(FString prefix, bool ignoreCase)
 	return startsWith(prefix.toStdString());
 }
 
-bool FString::endsWith(std::string suffix, bool ignoreCase)
+bool FString::endsWith(const std::string& suffix, bool ignoreCase)
 {
-	if (suffix.length() > base.length())
+	if (base.length() >= suffix.length())
+		return base.compare(base.length() - suffix.length(), suffix.length(), suffix) == 0;
+	else
 		return false;
-	return indexOf(suffix, ignoreCase, 0, 1, false) == (int)(base.length() - 1);
 }
 
 bool FString::endsWith(FString suffix, bool ignoreCase)
@@ -147,41 +151,41 @@ int FString::compare(FString other)
 
 int FString::indexOf(std::string sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
 {
+	std::string baseCopy = base;
 	if (!fromBegin)
 	{
-		FString sfindInverted = FString(sfind).invert();
-		if (invert().indexOf(sfindInverted, ignoreCase, fromPos, occurences) == -1)
-			return -1;
-		return base.length() - 1 - invert().indexOf(sfindInverted, ignoreCase, fromPos, occurences);
+		std::reverse(sfind.begin(), sfind.end());
+		std::reverse(baseCopy.begin(), baseCopy.end());
 	}
-	int result = -1;
-	if (base.length() < sfind.length() || occurences < 1)
-		return result;
-	for (unsigned int i = fromPos; i < base.length(); i++)
+	if (ignoreCase)
 	{
-		for (unsigned int j = 0; j < sfind.length(); j ++)
-		{
-			if (ignoreCase && toupper(base[i + j]) != toupper(sfind[j]))
-				break;
-			else if (base[i + j] != sfind[j])
-				break;
-			if (j == sfind.length() - 1)
-			{
-				result = i;
-				occurences --;
-			}
-		}
-		if (occurences == 0)
-			break;
+		std::transform(baseCopy.begin(), baseCopy.end(), baseCopy.begin(), ::tolower);
+        std::transform(sfind.begin(), sfind.end(), sfind.begin(), ::tolower);
 	}
-	if (occurences != 0)
+	if (baseCopy.length() < sfind.length() || occurences < 1)
 		return -1;
+
+	int result = -1;
+	size_t pos = baseCopy.find(sfind, fromPos);
+
+	while (pos != std::string::npos)
+	{
+        occurences--;
+        if (occurences == 0)
+        {
+        	if (fromBegin)
+				result = pos;
+			else
+				result = baseCopy.size() - pos - 1;
+        }
+        pos = baseCopy.find(sfind, pos + 1);
+    }
 	return result;
 }
 
 int FString::indexOf(FString sfind, bool ignoreCase, unsigned int fromPos, unsigned int occurences, bool fromBegin)
 {
-	return indexOf(sfind.toStdString(), ignoreCase, fromPos);
+	return indexOf(sfind.toStdString(), ignoreCase, fromPos, occurences, fromBegin);
 }
 
 int FString::toInt()
@@ -202,16 +206,8 @@ int FString::toInt()
 char FString::charAt(unsigned int index)
 {
 	if (index >= base.length())
-		throw "Can't return char at position " + fromInt(index).toStdString() + " for string " + base + " because the index specified is bigger than its length.";
+		throw "Can't return char at position " + std::to_string(index) + " for string " + base + " because the index specified is bigger than its length.";
 	return base[index];
-}
-
-char* FString::toCharArray()
-{
-	char* carray = new char[base.length()];
-	for (unsigned int i = 0; i < base.length(); i ++)
-		carray[i] = base[i];
-	return carray;
 }
 
 std::string FString::toStdString() const
@@ -235,6 +231,16 @@ FString FString::invert(unsigned int ibegin, int iend)
 	unsigned int uiend = base.length();
 	if (iend >= 0)
 		uiend = (unsigned)iend;
+	if (ibegin >= base.length() || uiend <= ibegin || uiend > base.length())
+		return FString("");
+
+	std::string inverted = base;
+	std::reverse(inverted.begin() + ibegin, inverted.begin() + uiend);
+	return FString(inverted);
+	/*
+	unsigned int uiend = base.length();
+	if (iend >= 0)
+		uiend = (unsigned)iend;
 	std::string resultstr = "";
 	if (ibegin >= base.length() || uiend <= ibegin || uiend > base.length())
 		return FString(resultstr);
@@ -246,7 +252,7 @@ FString FString::invert(unsigned int ibegin, int iend)
 		result = result + substring(0, ibegin);
 	result = result + FString(resultstr);
 	result = result + substring(uiend);
-	return result;
+	return result; */
 }
 
 std::vector<unsigned int> FString::findAll(std::string find, bool ignoreCase, int fromPos)
@@ -302,10 +308,10 @@ std::vector<FString> FString::split(std::string sfind, bool ignoreCase, bool all
 		return result;
 	if (!fromBegin && !all)
 	{
-		FString findInverted = FString(sfind).invert();
+		std::reverse(sfind.begin(), sfind.end());
 		FString inverted = invert();
-		result = inverted.split(findInverted.toStdString(), ignoreCase, all, occurences);
-		for (unsigned int i = 0; i < result.size(); i ++)
+		result = inverted.split(sfind, ignoreCase, all, occurences);
+		for (unsigned int i = 0; i < result.size(); i++)
 			result[i] = result[i].invert();
 		std::reverse(result.begin(), result.end());
 		return result;

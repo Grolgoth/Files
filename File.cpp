@@ -6,7 +6,7 @@
 #include <filesystem>
 
 #ifdef OS_Windows
-#include <sys/stat.h>
+#include "sys/stat.h"
 #include "windows.h"
 #include "windef.h"
 #elif defined(OS_Linux)
@@ -127,24 +127,40 @@ File::File(const File& other) : mabsoluteFileName(other.mabsoluteFileName), dir(
 
 bool File::exists()
 {
-	struct stat buffer;
-	return (stat(mabsoluteFileName.c_str(), &buffer) == 0);
+	return std::filesystem::exists(mabsoluteFileName);
 }
 
 bool File::isDir()
 {
-	if (dir == 'u')
-	{
-		struct stat buffer;
-		if( stat(mabsoluteFileName.c_str(), &buffer) == 0 )
+	#ifdef OS_Windows
+		if (dir == 'u')
 		{
-			if( buffer.st_mode & S_IFDIR )
-				dir = 'd';
-			else if ( buffer.st_mode & S_IFREG )
-				dir = 'f';
+			struct stat buffer;
+			if( stat(mabsoluteFileName.c_str(), &buffer) == 0 )
+			{
+				if( buffer.st_mode & S_IFDIR )
+					dir = 'd';
+				else if ( buffer.st_mode & S_IFREG )
+					dir = 'f';
+			}
 		}
-	}
-	return dir == 'd';
+		return dir == 'd';
+	#endif // OS_Windows
+    if (dir == 'u')
+    {
+        if (std::filesystem::exists(mabsoluteFileName))
+        {
+            if (std::filesystem::is_directory(mabsoluteFileName))
+            {
+                dir = 'd';
+            }
+            else if (std::filesystem::is_regular_file(mabsoluteFileName))
+            {
+                dir = 'f';
+            }
+        }
+    }
+    return dir == 'd';
 }
 
 bool File::isOpen()
@@ -170,9 +186,13 @@ unsigned long File::getPos()
 
 unsigned long File::getSize()
 {
-    struct stat stat_buf;
-    int rc = stat(mabsoluteFileName.c_str(), &stat_buf);
-    return rc == 0 ? stat_buf.st_size : -1;
+    try
+    {
+        return std::filesystem::file_size(mabsoluteFileName);
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error getting file size: " << e.what() << std::endl;
+        return 0;
+    }
 }
 
 std::string File::getFileName()

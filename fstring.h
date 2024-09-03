@@ -20,9 +20,9 @@ class FString {
 		bool contains(std::string sfind, bool ignoreCase = true);
 		bool contains(FString sfind, bool ignoreCase = true);
 		bool containsRegex(std::string sregex);
-		bool startsWith(std::string prefix, bool ignoreCase = true);
+		bool startsWith(const std::string prefix, bool ignoreCase = true);
 		bool startsWith(FString prefix, bool ignoreCase = true);
-		bool endsWith(std::string suffix, bool ignoreCase = true);
+		bool endsWith(const std::string& suffix, bool ignoreCase = true);
 		bool endsWith(FString suffix, bool ignoreCase = true);
 		bool allDigits();
 		unsigned int length();
@@ -32,7 +32,6 @@ class FString {
 		int indexOf(FString sfind, bool ignoreCase = true, unsigned int fromPos = 0, unsigned int occurences = 1, bool fromBegin = true);
 		int toInt();
 		char charAt(unsigned int index);
-		char* toCharArray();
 		std::string toStdString() const;
 		FString substring(unsigned int ibegin, int iend = -1);
 		FString invert(unsigned int ibegin = 0, int iend = -1);
