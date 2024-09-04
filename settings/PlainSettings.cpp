@@ -196,7 +196,7 @@ bool openSet(std::string linestr, std::string* currentSet, std::vector<std::stri
 bool resolveLine(std::string line, std::string* currentSet, std::vector<std::string>* sets, std::vector<std::string>* reservedSets, std::vector<std::string>* reservedLines, int pos, std::string* error)
 {
 	#ifdef OS_Windows
-		if (line.back() == ('\r'))
+		if (!line.empty() && line.back() == ('\r'))
 			line = line.substr(0, line.length() - 1);
 	#endif // OS_Windows
 	if (line.find(".") != std::string::npos)
@@ -204,9 +204,9 @@ bool resolveLine(std::string line, std::string* currentSet, std::vector<std::str
 		*error = "Found dot character (.). This character is reserved for this format and should not be used. Line: " + std::to_string(pos);
 		return false;
 	}
-	if (line[0] == '[')
+	if (!line.empty() && line[0] == '[')
 		return openSet(line, currentSet, sets, reservedSets, pos, error);
-	if (line == "~" || line == "")
+	if (line == "~" || line.empty())
 		return closeSet(line, currentSet, pos, error);
 	return resolveNormalLine(line, *currentSet, reservedLines, pos, error);
 }
