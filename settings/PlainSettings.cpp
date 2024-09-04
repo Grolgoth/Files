@@ -175,7 +175,7 @@ bool closeSet(std::string linestr, std::string* currentSet, int pos, std::string
 bool openSet(std::string linestr, std::string* currentSet, std::vector<std::string>* sets, std::vector<std::string>* reservedSets, int pos, std::string* error)
 {
 	nextSet(sets, currentSet);
-	if (!linestr.back() == ']')
+	if (linestr.back() != ']')
 	{
 		*error = "Found opening bracket ([) to declare subset without corresponding closing bracket (]) at the end of the line. Line: " + std::to_string(pos);
 		return false;
