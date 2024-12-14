@@ -321,7 +321,10 @@ std::vector<FString> FString::split(std::string sfind, bool ignoreCase, bool all
 		result.push_back(substring(0, indexOf(sfind, ignoreCase)));
 		int nextStringPos = indexOf(sfind, ignoreCase) + sfind.length();
 		if ((unsigned)nextStringPos == base.length())
+		{
+			result.push_back(FString(""));
 			return result;
+		}
 		result.push_back(substring(nextStringPos, base.length()));
 		if (all || occurences > 1)
 		{
