@@ -226,6 +226,20 @@ FString FString::substring(unsigned int ibegin, int iend)
 	return resultToCopy;
 }
 
+FString FString::toUpper()
+{
+	std::string result = base;
+	std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+	return FString(result);
+}
+
+FString FString::toLower()
+{
+	std::string result = base;
+	std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+	return FString(result);
+}
+
 FString FString::invert(unsigned int ibegin, int iend)
 {
 	unsigned int uiend = base.length();
@@ -358,6 +372,32 @@ std::vector<std::string> FString::getSplits(std::string find, bool ignoreCase, i
 			continue;
 		}
 		result.push_back(index.toStdString());
+	}
+	return result;
+}
+
+std::vector<std::string> FString::getRanges(std::string first, std::string second, bool all, int occurences, bool fromBegin)
+{
+	std::vector<std::string> result;
+	std::string target = base;
+	if (!fromBegin)
+		std::reverse(target.begin(), target.end());
+	FString ftarget = FString(target);
+	std::vector<unsigned int> startIndices = ftarget.findAll(first, 0);
+	std::vector<unsigned int> endIndices = ftarget.findAll(second, 0);
+	if (!fromBegin)
+	{
+		for (unsigned int& index : startIndices)
+			index = target.length() - 1 - index;
+		for (unsigned int& index : endIndices)
+			index = target.length() - 1 - index;
+	}
+	for (int i = 0; i < startIndices.size() && i < endIndices.size() && (all || i < occurences); i++)
+	{
+		if (startIndices[i] == base.length() - 1 || startIndices[i] >= endIndices[i] - 1)
+			break;
+		std::string str = base.substr(startIndices[i] + 1, endIndices[i] - startIndices[i] - 1);
+		result.push_back(str);
 	}
 	return result;
 }

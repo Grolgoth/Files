@@ -34,6 +34,8 @@ class FString {
 		char charAt(unsigned int index);
 		std::string toStdString() const;
 		FString substring(unsigned int ibegin, int iend = -1);
+		FString toUpper();
+		FString toLower();
 		FString invert(unsigned int ibegin = 0, int iend = -1);
 		FString replace(std::string sfind, std::string target, bool ignoreCase = true, bool all = true, int occurences = 1, bool fromBegin = true);
 		FString encode(Algorithm algorithm);
@@ -42,6 +44,7 @@ class FString {
 		std::vector<FString> split(std::string sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 		std::vector<FString> split(FString sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 		std::vector<std::string> getSplits(std::string find, bool ignoreCase = false, int after = 0, bool all = false, int occurences = 1, bool fromBegin = true);
+		std::vector<std::string> getRanges(std::string first, std::string second,bool all = true, int occurences = 1, bool fromBegin = true);
 
 	private:
 		std::string base;
