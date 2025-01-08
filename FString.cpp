@@ -192,14 +192,18 @@ int FString::toInt()
 {
     try
     {
-		return std::stoi(base);
+    	if (base.length() > 0 && base[0] == '-')
+			return std::stoi(base) * -1;
+		else
+			return std::stoi(base);
     }
     catch(...)
     {
         if(!isdigit(base[0]))
-			throw "Can't convert " + base + " to an integer, because it doesn't start with a digit.";
+			std::cout <<  "Can't convert " + base + " to an integer, because it doesn't start with a digit." << std::endl;
 		else
-			throw "Can't convert " + base + " to an integer. Unknown error during conversion.";
+			std::cout << "Can't convert " + base + " to an integer. Unknown error during conversion." << std::endl;
+		return 0;
     }
 }
 
