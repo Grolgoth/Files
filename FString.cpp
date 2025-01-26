@@ -389,6 +389,26 @@ std::vector<std::string> FString::getRanges(std::string first, std::string secon
 	FString ftarget = FString(target);
 	std::vector<unsigned int> startIndices = ftarget.findAll(first, 0);
 	std::vector<unsigned int> endIndices = ftarget.findAll(second, 0);
+	if (endIndices.size() == startIndices.size() - 1)
+		endIndices.push_back(base.length() - 1);
+	if (startIndices.size() < endIndices.size() || endIndices.size() < startIndices.size() - 1)
+	{
+		std::cout << "Error in FString::getRanges. Discrepancy between number of first delimiter and second delimiter matches: " << startIndices.size() << " vs " << endIndices.size() << " delimiters: " << first << " " << second << "in string " << base << std::endl;
+		return {};
+	}
+	if (first == second)
+	{
+		for (unsigned int i = 0; i < startIndices.size();)
+		{
+			if ((startIndices.size() + i) % 2 == 1)
+				startIndices.erase(startIndices.begin() + i);
+			else
+			{
+				endIndices.erase(endIndices.begin() + i);
+				++i;
+			}
+		}
+	}
 	if (!fromBegin)
 	{
 		for (unsigned int& index : startIndices)
@@ -404,4 +424,27 @@ std::vector<std::string> FString::getRanges(std::string first, std::string secon
 		result.push_back(str);
 	}
 	return result;
+}
+
+std::vector<std::string> FString::getArray(std::string firstIndex, std::string secondIndex, std::string delimiter, bool force, int occurences, bool fromBegin, bool ignorecase)
+{
+	std::string target = base;
+	int first = indexOf(firstIndex, ignorecase, 0, occurences, fromBegin);
+	int second = indexOf(secondIndex, ignorecase, first + 1, 1, true);
+	if (first == -1 || (!force && second == -1))
+	{
+		std::cout << "Error in FString::getArray. firstIndex " << firstIndex << " or secondIndex " << secondIndex << " could not be found in string " << base << std::endl;
+		return {};
+	}
+	if (second == -1)
+		second = base.length();
+	if (second <= first)
+	{
+		std::cout << "Error in FString::getArray. secondIndex " << secondIndex << "found at pos: " << second << " is equal to or smaller than firstIndex " << firstIndex << " found at pos " << first << " for string " << base << std::endl;
+		return {};
+	}
+	target = FString(target).substring(first + 1, second).toStdString();
+	if (!FString(target).contains(delimiter, ignorecase))
+		return {target};
+	return FString(target).getSplits(delimiter, ignorecase, 0, true);
 }
