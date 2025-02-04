@@ -277,13 +277,15 @@ std::string resolveKey(std::string keystr, std::string* currentSet, std::vector<
 
 std::vector<std::string> PlainSettings::get(std::vector<std::string> keys)
 {
-	std::vector<std::string> result;
+	std::vector<std::string> results;
 	for (std::string key : keys)
 	{
 		std::string currentSet = sets[0];
-		result.push_back(get::resolveKey(key, &currentSet, &reservedSets, &reservedLines, &sets));
+		std::string result = get::resolveKey(key, &currentSet, &reservedSets, &reservedLines, &sets);
+		if (result != "")
+			results.push_back(result);
 	}
-	return result;
+	return results;
 }
 
 std::vector<std::string> PlainSettings::getSet(std::string key)
@@ -336,7 +338,7 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 		else if (subset > 0) //closing subset
 		{
 			result.push_back("}");
-			currentSet = currentSet.substr(0, currentSet.length() - 2);
+			currentSet = currentSet.substr(0, currentSet.rfind(" "));
 			subset--;
 			i--;
 		}

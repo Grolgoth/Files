@@ -17,6 +17,7 @@ class FString {
 		bool operator!=(const FString& b);
 		bool toBool();
 		bool isEmpty();
+		bool isNumber();
 		bool contains(std::string sfind, bool ignoreCase = true);
 		bool contains(FString sfind, bool ignoreCase = true);
 		bool containsRegex(std::string sregex);

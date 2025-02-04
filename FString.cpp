@@ -83,6 +83,11 @@ bool FString::isEmpty()
 	return base.length() == 0;
 }
 
+bool FString::isNumber()
+{
+	return std::all_of(base.begin(), base.end(), ::isdigit);
+}
+
 bool FString::contains(std::string sfind, bool ignoreCase)
 {
 	return indexOf(sfind, ignoreCase) > -1;
