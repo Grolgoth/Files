@@ -2,6 +2,7 @@
 #include <regex>
 #include <math.h>
 #include "encoder.h"
+#include <map>
 
 FString FString::fromVector(std::vector<std::string> vect, std::string appendElements)
 {
@@ -299,10 +300,10 @@ FString FString::replace(std::string sfind, std::string target, bool ignoreCase,
 	std::vector<FString> split = this->split(sfind, ignoreCase, all, occurences, fromBegin);
 	if (split.empty())
 		return *this;
-	for (FString index : split)
+	for (size_t i = 0; i < split.size(); i++)
 	{
-		result += index.toStdString();
-		if (index != split.back() || split.size() == 1)
+		result += split[i].toStdString();
+		if (i < split.size() - 1 || split.size() == 1)
 			result += target;
 	}
 	return FString(result);
@@ -385,7 +386,7 @@ std::vector<std::string> FString::getSplits(std::string find, bool ignoreCase, i
 	return result;
 }
 
-std::vector<std::string> FString::getRanges(std::string first, std::string second, bool all, int occurences, bool fromBegin)
+std::vector<std::string> FString::getRanges(std::string first, std::string second, bool all, int occurences, bool fromBegin, bool extraDelimiterAtEnd)
 {
 	std::vector<std::string> result;
 	std::string target = base;
@@ -394,12 +395,54 @@ std::vector<std::string> FString::getRanges(std::string first, std::string secon
 	FString ftarget = FString(target);
 	std::vector<unsigned int> startIndices = ftarget.findAll(first, 0);
 	std::vector<unsigned int> endIndices = ftarget.findAll(second, 0);
-	if (endIndices.size() == startIndices.size() - 1)
-		endIndices.push_back(base.length() - 1);
-	if (startIndices.size() < endIndices.size() || endIndices.size() < startIndices.size() - 1)
+	if (extraDelimiterAtEnd)
+		endIndices.push_back(base.length());
+	if (startIndices.size() == 0)
 	{
-		std::cout << "Error in FString::getRanges. Discrepancy between number of first delimiter and second delimiter matches: " << startIndices.size() << " vs " << endIndices.size() << " delimiters: " << first << " " << second << "in string " << base << std::endl;
+		std::cout << "Error in FString::getRanges: first delimiter " << first << " wasn't found in string " << base << std::endl;
 		return {};
+	}
+	if (startIndices.size() != endIndices.size())
+	{
+		std::map<int, int> pairs;
+		int j = 0;
+		if (startIndices.size() > endIndices.size())
+		{
+			for (int i = 0; i < endIndices.size(); i++)
+			{
+				if (startIndices[j] < endIndices[i])
+				{
+					int originalJ = j;
+					while (j < startIndices.size() - 1 && startIndices[++j] < endIndices[i]);
+					if (j > originalJ)
+						j--;
+					if (startIndices[j] < endIndices[i] - 1)
+						pairs[startIndices[j]] = endIndices[i];
+					startIndices.erase(startIndices.begin(), startIndices.begin() + j + 1);
+					j = 0;
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < startIndices.size(); i++)
+			{
+				if (endIndices[j] < startIndices[i])
+					while (j < endIndices.size() - 1 && endIndices[++j] < startIndices[i]);
+				if (startIndices[i] < endIndices[j] - 1)
+					pairs[startIndices[i]] = endIndices[j];
+			}
+		}
+		startIndices.clear();
+		endIndices.clear();
+		for (auto pair : pairs)
+		{
+			if (pair.first < pair.second - 1)
+			{
+				startIndices.push_back(pair.first);
+				endIndices.push_back(pair.second);
+			}
+		}
 	}
 	if (first == second)
 	{

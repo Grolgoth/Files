@@ -317,7 +317,7 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 		}
 		if (pos != std::string::npos)
 		{
-			if (index.substr(pos + 1).length() > currentSet.length()) //Opening subset
+			if (index.substr(pos + 1).length() > currentSet.length() && index.substr(pos + 1 + currentSet.length())[0] == ' ') //Opening subset
 			{
 				subset++;
 				std::string thisSetName;
@@ -333,7 +333,8 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 				currentSet = index.substr(pos + 1);
 				result.push_back(thisSetName + "{");
 			}
-			result.push_back(index.substr(0, index.length() - currentSet.length() - 1));
+			if (index.substr(pos + 1).length() == currentSet.length())
+				result.push_back(index.substr(0, index.length() - currentSet.length() - 1));
 		}
 		else if (subset > 0) //closing subset
 		{

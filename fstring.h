@@ -45,7 +45,7 @@ class FString {
 		std::vector<FString> split(std::string sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 		std::vector<FString> split(FString sfind, bool ignoreCase = true, bool all = false, int occurences = 1, bool fromBegin = true);
 		std::vector<std::string> getSplits(std::string find, bool ignoreCase = false, int after = 0, bool all = false, int occurences = 1, bool fromBegin = true);
-		std::vector<std::string> getRanges(std::string first, std::string second, bool all = true, int occurences = 1, bool fromBegin = true);
+		std::vector<std::string> getRanges(std::string first, std::string second, bool all = true, int occurences = 1, bool fromBegin = true, bool extraDelimiterAtEnd = false);
 		std::vector<std::string> getArray(std::string firstIndex, std::string secondIndex, std::string delimiter, bool force = false, int occurences = 1, bool fromBegin = true, bool ignorecase = false);
 
 	private:
