@@ -305,44 +305,24 @@ std::vector<std::string> PlainSettings::getSet(std::string key)
 	for (int i = 0; i < reservedLines.size(); i++)
 	{
 		std::string index = reservedLines[i];
-		size_t pos = index.find("=" + currentSet);
-		size_t posFirst = index.find("=");
-		if (pos == posFirst)
+		if (local::endsWith(index, "=" + currentSet))
 		{
-			size_t posCorrected = index.substr(posFirst + 1).find("=" + currentSet);
-			if (posCorrected != std::string::npos)
-				pos = posFirst + 1 + posCorrected;
-			else
-				continue;
+			size_t pos = index.find("=" + currentSet);
+			result.push_back(index.substr(0, pos));
 		}
-		if (pos != std::string::npos)
-		{
-			if (index.substr(pos + 1).length() > currentSet.length() && index.substr(pos + 1 + currentSet.length())[0] == ' ') //Opening subset
-			{
-				subset++;
-				std::string thisSetName;
-				int numInPreviousSet = std::stoi(index.substr(index.rfind(" ") + 1));
-				for (std::string str : reservedSets)
-				{
-					if (local::endsWith(str, "=" + currentSet))
-					{
-						if (--numInPreviousSet == 0)
-							thisSetName = str.substr(0, str.find("="));
-					}
-				}
-				currentSet = index.substr(pos + 1);
-				result.push_back(thisSetName + "{");
-			}
-			if (index.substr(pos + 1).length() == currentSet.length())
-				result.push_back(index.substr(0, index.length() - currentSet.length() - 1));
-		}
-		else if (subset > 0) //closing subset
-		{
-			result.push_back("}");
-			currentSet = currentSet.substr(0, currentSet.rfind(" "));
-			subset--;
-			i--;
-		}
+	}
+	std::vector<std::string> subSets;
+	for (std::string str : reservedSets)
+		if (local::endsWith(str, "=" + currentSet))
+			subSets.push_back(str);
+	for (int i = 0; i < subSets.size(); i++)
+	{
+		std::string subSetName = subSets[i].substr(0, subSets[i].rfind("="));
+		result.push_back(subSetName + "{");
+		std::vector<std::string> result2 = getSet(key + "." + subSetName);
+		for (std::string str : result2)
+			result.push_back(str);
+		result.push_back("}");
 	}
 	return result;
 }
